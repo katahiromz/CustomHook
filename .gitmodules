@@ -1,0 +1,6 @@
+[submodule "minhook"]
+	path = minhook
+	url = https://github.com/katahiromz/minhook.git
+[submodule "WondersXP"]
+	path = WondersXP
+	url = https://github.com/katahiromz/WondersXP.git
