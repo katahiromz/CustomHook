@@ -295,7 +295,12 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, std::string& name, FUNCTION& fn)
     }
     fprintf(fp, ");\n");
 
-    fprintf(fp, "    ret = fn_%s(", name.c_str());
+    split(fields, fn.ret, ':');
+    if (fields[0] == "v")
+        fprintf(fp, "    fn_%s(", name.c_str());
+    else
+        fprintf(fp, "    ret = fn_%s(", name.c_str());
+
     first = true;
     iarg = 1;
     for (auto& param : fn.params)
@@ -317,10 +322,14 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, std::string& name, FUNCTION& fn)
     }
     fprintf(fp, ");\n");
 
-    fprintf(fp, "    TRACE(\"%s returned ", name.c_str());
     split(fields, fn.ret, ':');
-    DoWriteSpecifier(fp, fields);
-    fprintf(fp, "\\n\", ret);\n");
+    if (fields[0] != "v")
+    {
+        fprintf(fp, "    TRACE(\"%s returned ", name.c_str());
+        split(fields, fn.ret, ':');
+        DoWriteSpecifier(fp, fields);
+        fprintf(fp, "\\n\", ret);\n");
+    }
 
     fprintf(fp, "    DoEnableHook(TRUE);\n");
 
@@ -426,7 +435,12 @@ BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, std::string& name, FUNCTION& fn)
     }
     fprintf(fp, ");\n");
 
-    fprintf(fp, "    ret = %s(", vname.c_str());
+    split(fields, fn.ret, ':');
+    if (fields[0] == "v")
+        fprintf(fp, "    %s(", vname.c_str());
+    else
+        fprintf(fp, "    ret = %s(", vname.c_str());
+
     first = true;
     iarg = 1;
     for (auto& param : fn.params)
@@ -448,10 +462,14 @@ BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, std::string& name, FUNCTION& fn)
     }
     fprintf(fp, ");\n");
 
-    fprintf(fp, "    TRACE(\"%s returned ", name.c_str());
     split(fields, fn.ret, ':');
-    DoWriteSpecifier(fp, fields);
-    fprintf(fp, "\\n\", ret);\n");
+    if (fields[0] != "v")
+    {
+        fprintf(fp, "    TRACE(\"%s returned ", name.c_str());
+        split(fields, fn.ret, ':');
+        DoWriteSpecifier(fp, fields);
+        fprintf(fp, "\\n\", ret);\n");
+    }
 
     fprintf(fp, "    DoEnableHook(TRUE);\n");
     fprintf(fp, "    va_end(va);\n");
