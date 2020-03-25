@@ -258,20 +258,27 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
 
         bool first = true, ellipse = false;
         int number = 1;
-        for (auto& param : fn.params)
+        if (fn.params.empty())
         {
-            if (!first)
-                fprintf(fp, ", ");
-            if (param == "...")
+            fprintf(fp, "void");
+        }
+        else
+        {
+            for (auto& param : fn.params)
             {
-                ellipse = true;
-                fprintf(fp, "%s\n", param.c_str());
-                break;
+                if (!first)
+                    fprintf(fp, ", ");
+                if (param == "...")
+                {
+                    ellipse = true;
+                    fprintf(fp, "%s\n", param.c_str());
+                    break;
+                }
+                split(fields, param, ':');
+                fprintf(fp, "%s %s", fields[1].c_str(), fields[2].c_str());
+                first = false;
+                ++number;
             }
-            split(fields, param, ':');
-            fprintf(fp, "%s %s", fields[1].c_str(), fields[2].c_str());
-            first = false;
-            ++number;
         }
         fprintf(fp, ")\n");
         fprintf(fp, "{\n");
@@ -282,7 +289,8 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
         }
 
         split(fields, fn.ret, ':');
-        fprintf(fp, "    %s ret;\n", fields[1].c_str());
+        if (fields[0] != "v")
+            fprintf(fp, "    %s ret;\n", fields[1].c_str());
 
         fprintf(fp, "    TRACE(\"%s(", name.c_str());
         first = true;
@@ -302,7 +310,12 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
             first = false;
             ++number;
         }
-        fprintf(fp, ")\\n\",\n          ");
+
+        if (fn.params.empty())
+            fprintf(fp, ")\\n\"");
+        else
+            fprintf(fp, ")\\n\",\n          ");
+
         first = true;
         number = 1;
         for (auto& param : fn.params)
@@ -344,7 +357,8 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
         DoWriteSpecifier(fp, fields);
         fprintf(fp, "\\n\", ret);\n");
 
-        fprintf(fp, "    return ret;\n");
+        if (fields[0] != "v")
+            fprintf(fp, "    return ret;\n");
 
         fprintf(fp, "}\n");
     }
