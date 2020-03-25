@@ -292,6 +292,8 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
         if (fields[0] != "v")
             fprintf(fp, "    %s ret;\n", fields[1].c_str());
 
+        fprintf(fp, "    DoEnableHook(FALSE);\n");
+
         fprintf(fp, "    TRACE(\"%s(", name.c_str());
         first = true;
         number = 1;
@@ -356,6 +358,8 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
         split(fields, fn.ret, ':');
         DoWriteSpecifier(fp, fields);
         fprintf(fp, "\\n\", ret);\n");
+
+        fprintf(fp, "    DoEnableHook(TRUE);\n");
 
         if (fields[0] != "v")
             fprintf(fp, "    return ret;\n");
