@@ -302,7 +302,7 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
             first = false;
             ++number;
         }
-        fprintf(fp, "\\n\",\n          ");
+        fprintf(fp, ")\\n\",\n          ");
         first = true;
         number = 1;
         for (auto& param : fn.params)

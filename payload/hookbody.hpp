@@ -8,7 +8,7 @@ int __stdcall
 DetourMessageBoxW(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT uType)
 {
     int ret;
-    TRACE("MessageBoxW(hWnd=%p, lpText=%p, lpCaption=%p, uType=%u\n",
+    TRACE("MessageBoxW(hWnd=%p, lpText=%p, lpCaption=%p, uType=%u)\n",
           hWnd, lpText, lpCaption, uType);
     ret = fn_MessageBoxW(hWnd, lpText, lpCaption, uType);
     TRACE("MessageBoxW returned %d\n", ret);
