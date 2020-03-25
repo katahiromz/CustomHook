@@ -231,14 +231,14 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
                 break;
             }
             split(fields, param, ':');
-            fprintf(fp, "%s p%d", fields[1].c_str(), number);
+            fprintf(fp, "%s %s", fields[1].c_str(), fields[2].c_str());
             first = false;
             ++number;
         }
         fprintf(fp, ")\n");
         fprintf(fp, "{\n");
 
-        fprintf(fp, "    return (*fn_%s)(", name.c_str());
+        fprintf(fp, "    return fn_%s(", name.c_str());
         first = true;
         number = 1;
         for (auto& param : fn.params)
@@ -250,7 +250,8 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
                 fprintf(fp, "%s\n", param.c_str());
                 break;
             }
-            fprintf(fp, "p%d", number);
+            split(fields, param, ':');
+            fprintf(fp, "%s", fields[2].c_str());
             first = false;
             ++number;
         }

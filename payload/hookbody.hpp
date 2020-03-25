@@ -5,9 +5,9 @@ typedef int (__stdcall *FN_MessageBoxW)(HWND, LPCWSTR, LPCWSTR, UINT);
 static FN_MessageBoxW fn_MessageBoxW = NULL;
 
 int __stdcall
-DetourMessageBoxW(HWND p1, LPCWSTR p2, LPCWSTR p3, UINT p4)
+DetourMessageBoxW(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT uType)
 {
-    return (*fn_MessageBoxW)(p1, p2, p3, p4);
+    return fn_MessageBoxW(hWnd, lpText, lpCaption, uType);
 }
 
 BOOL DoHook(BOOL bHook)
