@@ -200,6 +200,43 @@ BOOL DoWriteFunctionVariables(FILE *fp, std::vector<std::string>& names)
     return TRUE;
 }
 
+BOOL DoWriteSpecifier(FILE *fp, std::vector<std::string>& fields)
+{
+    switch (fields[0][0])
+    {
+    case 'i':
+        if (fields[0] == "i64")
+        {
+            fprintf(fp, "%%I64d", fields[2].c_str());
+        }
+        else
+        {
+            fprintf(fp, "%%d", fields[2].c_str());
+        }
+        break;
+    case 'u':
+        if (fields[0] == "u64")
+        {
+            fprintf(fp, "%%I64u", fields[2].c_str());
+        }
+        else
+        {
+            fprintf(fp, "%%u", fields[2].c_str());
+        }
+        break;
+    case 'f':
+        fprintf(fp, "%%f", fields[2].c_str());
+        break;
+    case 'p': case 'h':
+        fprintf(fp, "%%p", fields[2].c_str());
+        break;
+    default:
+        fprintf(fp, "?", fields[2].c_str());
+        break;
+    }
+    return TRUE;
+}
+
 BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
 {
     for (auto& name : names)
@@ -219,7 +256,7 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
         fprintf(fp, "%s %s\n", ret.c_str(), fn.convention.c_str());
         fprintf(fp, "Detour%s(", name.c_str());
 
-        bool first = true;
+        bool first = true, ellipse = false;
         int number = 1;
         for (auto& param : fn.params)
         {
@@ -227,6 +264,7 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
                 fprintf(fp, ", ");
             if (param == "...")
             {
+                ellipse = true;
                 fprintf(fp, "%s\n", param.c_str());
                 break;
             }
@@ -238,7 +276,51 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
         fprintf(fp, ")\n");
         fprintf(fp, "{\n");
 
-        fprintf(fp, "    return fn_%s(", name.c_str());
+        if (ellipse)
+        {
+            // TODO:
+        }
+
+        split(fields, fn.ret, ':');
+        fprintf(fp, "    %s ret;\n", fields[1].c_str());
+
+        fprintf(fp, "    TRACE(\"%s(", name.c_str());
+        first = true;
+        number = 1;
+        for (auto& param : fn.params)
+        {
+            if (!first)
+                fprintf(fp, ", ");
+            if (param == "...")
+            {
+                break;
+            }
+            split(fields, param, ':');
+
+            fprintf(fp, "%s=", fields[2].c_str());
+            DoWriteSpecifier(fp, fields);
+            first = false;
+            ++number;
+        }
+        fprintf(fp, "\\n\",\n          ");
+        first = true;
+        number = 1;
+        for (auto& param : fn.params)
+        {
+            if (!first)
+                fprintf(fp, ", ");
+            if (param == "...")
+            {
+                break;
+            }
+            split(fields, param, ':');
+            fprintf(fp, "%s", fields[2].c_str());
+            first = false;
+            ++number;
+        }
+        fprintf(fp, ");\n");
+
+        fprintf(fp, "    ret = fn_%s(", name.c_str());
         first = true;
         number = 1;
         for (auto& param : fn.params)
@@ -256,6 +338,13 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
             ++number;
         }
         fprintf(fp, ");\n");
+
+        fprintf(fp, "    TRACE(\"%s returned ", name.c_str());
+        split(fields, fn.ret, ':');
+        DoWriteSpecifier(fp, fields);
+        fprintf(fp, "\\n\", ret);\n");
+
+        fprintf(fp, "    return ret;\n");
 
         fprintf(fp, "}\n");
     }
