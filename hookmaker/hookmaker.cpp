@@ -237,110 +237,118 @@ BOOL DoWriteSpecifier(FILE *fp, std::vector<std::string>& fields)
     return TRUE;
 }
 
-BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
+BOOL DoWriteDetourFunctionBody(FILE *fp, std::string& name, FUNCTION& fn)
 {
-    for (auto& name : names)
+    std::vector<std::string> fields;
+    split(fields, fn.ret, ':');
+
+    if (fields[0] != "v")
+        fprintf(fp, "    %s ret;\n", fields[1].c_str());
+
+    fprintf(fp, "    DoEnableHook(FALSE);\n");
+
+    fprintf(fp, "    TRACE(\"%s(", name.c_str());
+    bool first = true;
+    int iarg = 1;
+    for (auto& param : fn.params)
     {
-        auto it = s_functions.find(name);
-        if (it == s_functions.end())
-            continue;
-
-        auto& fn = it->second;
-        std::vector<std::string> fields;
-        split(fields, fn.ret, ':');
-        if (fields.size() < 2)
-            continue;
-
-        auto ret = fields[1];
-
-        fprintf(fp, "%s %s\n", ret.c_str(), fn.convention.c_str());
-        fprintf(fp, "Detour%s(", name.c_str());
-
-        bool first = true;
-        int number = 1;
-        if (fn.params.empty())
+        if (!first)
+            fprintf(fp, ", ");
+        if (param == "...")
         {
-            fprintf(fp, "void");
+            break;
         }
+        split(fields, param, ':');
+
+        if (fields[2].empty())
+            fprintf(fp, "arg%d=", iarg);
         else
+            fprintf(fp, "%s=", fields[2].c_str());
+        DoWriteSpecifier(fp, fields);
+        first = false;
+        ++iarg;
+    }
+
+    if (fn.params.empty())
+        fprintf(fp, ")\\n\"");
+    else
+        fprintf(fp, ")\\n\",\n          ");
+
+    first = true;
+    iarg = 1;
+    for (auto& param : fn.params)
+    {
+        if (!first)
+            fprintf(fp, ", ");
+        if (param == "...")
         {
-            for (auto& param : fn.params)
-            {
-                if (!first)
-                    fprintf(fp, ", ");
-                if (param == "...")
-                {
-                    fprintf(fp, "%s\n", param.c_str());
-                    break;
-                }
-                split(fields, param, ':');
-                if (fields[2].empty())
-                    fprintf(fp, "%s arg%d", fields[1].c_str(), number);
-                else
-                    fprintf(fp, "%s %s", fields[1].c_str(), fields[2].c_str());
-                first = false;
-                ++number;
-            }
+            break;
         }
-        fprintf(fp, ")\n");
-        fprintf(fp, "{\n");
-
-        split(fields, fn.ret, ':');
-        if (fields[0] != "v")
-            fprintf(fp, "    %s ret;\n", fields[1].c_str());
-
-        fprintf(fp, "    DoEnableHook(FALSE);\n");
-
-        fprintf(fp, "    TRACE(\"%s(", name.c_str());
-        first = true;
-        number = 1;
-        for (auto& param : fn.params)
-        {
-            if (!first)
-                fprintf(fp, ", ");
-            if (param == "...")
-            {
-                break;
-            }
-            split(fields, param, ':');
-
-            if (fields[2].empty())
-                fprintf(fp, "arg%d=", number);
-            else
-                fprintf(fp, "%s=", fields[2].c_str());
-            DoWriteSpecifier(fp, fields);
-            first = false;
-            ++number;
-        }
-
-        if (fn.params.empty())
-            fprintf(fp, ")\\n\"");
+        split(fields, param, ':');
+        if (fields[2].empty())
+            fprintf(fp, "arg%d", iarg);
         else
-            fprintf(fp, ")\\n\",\n          ");
+            fprintf(fp, "%s", fields[2].c_str());
+        first = false;
+        ++iarg;
+    }
+    fprintf(fp, ");\n");
 
-        first = true;
-        number = 1;
-        for (auto& param : fn.params)
+    fprintf(fp, "    ret = fn_%s(", name.c_str());
+    first = true;
+    iarg = 1;
+    for (auto& param : fn.params)
+    {
+        if (!first)
+            fprintf(fp, ", ");
+        if (param == "...")
         {
-            if (!first)
-                fprintf(fp, ", ");
-            if (param == "...")
-            {
-                break;
-            }
-            split(fields, param, ':');
-            if (fields[2].empty())
-                fprintf(fp, "arg%d", number);
-            else
-                fprintf(fp, "%s", fields[2].c_str());
-            first = false;
-            ++number;
+            fprintf(fp, "%s\n", param.c_str());
+            break;
         }
-        fprintf(fp, ");\n");
+        split(fields, param, ':');
+        if (fields[2].empty())
+            fprintf(fp, "arg%d", iarg);
+        else
+            fprintf(fp, "%s", fields[2].c_str());
+        first = false;
+        ++iarg;
+    }
+    fprintf(fp, ");\n");
 
-        fprintf(fp, "    ret = fn_%s(", name.c_str());
-        first = true;
-        number = 1;
+    fprintf(fp, "    TRACE(\"%s returned ", name.c_str());
+    split(fields, fn.ret, ':');
+    DoWriteSpecifier(fp, fields);
+    fprintf(fp, "\\n\", ret);\n");
+
+    fprintf(fp, "    DoEnableHook(TRUE);\n");
+
+    if (fields[0] != "v")
+        fprintf(fp, "    return ret;\n");
+
+    return TRUE;
+}
+
+BOOL DoWriteDetourFunctionHead(FILE *fp, std::string& name, FUNCTION& fn)
+{
+    std::vector<std::string> fields;
+    split(fields, fn.ret, ':');
+    if (fields.size() < 2)
+        return FALSE;
+
+    auto ret = fields[1];
+
+    fprintf(fp, "%s %s\n", ret.c_str(), fn.convention.c_str());
+    fprintf(fp, "Detour%s(", name.c_str());
+
+    bool first = true;
+    int iarg = 1;
+    if (fn.params.empty())
+    {
+        fprintf(fp, "void");
+    }
+    else
+    {
         for (auto& param : fn.params)
         {
             if (!first)
@@ -350,29 +358,39 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
                 fprintf(fp, "%s\n", param.c_str());
                 break;
             }
+
             split(fields, param, ':');
             if (fields[2].empty())
-                fprintf(fp, "arg%d", number);
+                fprintf(fp, "%s arg%d", fields[1].c_str(), iarg);
             else
-                fprintf(fp, "%s", fields[2].c_str());
+                fprintf(fp, "%s %s", fields[1].c_str(), fields[2].c_str());
             first = false;
-            ++number;
+            ++iarg;
         }
-        fprintf(fp, ");\n");
-
-        fprintf(fp, "    TRACE(\"%s returned ", name.c_str());
-        split(fields, fn.ret, ':');
-        DoWriteSpecifier(fp, fields);
-        fprintf(fp, "\\n\", ret);\n");
-
-        fprintf(fp, "    DoEnableHook(TRUE);\n");
-
-        if (fields[0] != "v")
-            fprintf(fp, "    return ret;\n");
-
-        fprintf(fp, "}\n");
     }
-    fprintf(fp, "\n");
+    fprintf(fp, ")\n");
+
+    return TRUE;
+}
+
+BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
+{
+    for (auto& name : names)
+    {
+        auto it = s_functions.find(name);
+        if (it == s_functions.end())
+            continue;
+
+        auto& fn = it->second;
+
+        DoWriteDetourFunctionHead(fp, name, fn);
+
+        fprintf(fp, "{\n");
+
+        DoWriteDetourFunctionBody(fp, name, fn);
+
+        fprintf(fp, "}\n\n");
+    }
     return TRUE;
 }
 
