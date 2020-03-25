@@ -256,6 +256,7 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, std::string& name, FUNCTION& fn)
             fprintf(fp, ", ");
         if (param == "...")
         {
+            fprintf(fp, "...");
             break;
         }
         split(fields, param, ':');
@@ -303,7 +304,7 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, std::string& name, FUNCTION& fn)
             fprintf(fp, ", ");
         if (param == "...")
         {
-            fprintf(fp, "%s\n", param.c_str());
+            fprintf(fp, "%s", param.c_str());
             break;
         }
         split(fields, param, ':');
@@ -322,6 +323,138 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, std::string& name, FUNCTION& fn)
     fprintf(fp, "\\n\", ret);\n");
 
     fprintf(fp, "    DoEnableHook(TRUE);\n");
+
+    if (fields[0] != "v")
+        fprintf(fp, "    return ret;\n");
+
+    return TRUE;
+}
+
+static const std::map<std::string, std::string> s_ellipse_map =
+{
+    { "printf", "vprintf" },
+    { "printf_s", "vprintf_s" },
+    { "fprintf", "vfprintf" },
+    { "fprintf_s", "vfprintf_s" },
+    { "sprintf", "vsprintf" },
+    { "sprintf_s", "vsprintf_s" },
+    { "vsnprintf", "vsnprintf_s" },
+    { "wprintf", "vwprintf" },
+    { "fwprintf", "fvwprintf" },
+    { "swprintf", "svwprintf" },
+    { "scanf", "vscanf" },
+    { "scanf_s", "vscanf_s" },
+    { "fscanf", "vfscanf" },
+    { "fscanf_s", "vfscanf_s" },
+    { "sscanf", "vsscanf" },
+    { "sscanf_s", "vsscanf_s" },
+    { "wscanf", "vwscanf" },
+    { "fwscanf", "fvwscanf" },
+    { "swscanf", "svwscanf" },
+    { "wsprintfA", "wvsprintfA" },
+    { "wsprintfW", "wvsprintfW" },
+    { "wnsprintfA", "wvnsprintfA" },
+    { "wnsprintfW", "wvnsprintfW" },
+};
+
+BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, std::string& name, FUNCTION& fn)
+{
+    auto it = s_ellipse_map.find(name);
+    if (it == s_ellipse_map.end())
+        return FALSE;
+    auto vname = it->second;
+
+    std::vector<std::string> fields;
+    split(fields, fn.ret, ':');
+
+    fprintf(fp, "    va_list va;\n");
+
+    if (fields[0] != "v")
+        fprintf(fp, "    %s ret;\n", fields[1].c_str());
+
+    split(fields, fn.params[fn.params.size() - 2], ':');
+
+    if (fields[2].empty())
+        fprintf(fp, "    va_start(va, arg%d);\n", int(fn.params.size() - 1));
+    else
+        fprintf(fp, "    va_start(va, %s);\n", fields[2]);
+    fprintf(fp, "    DoEnableHook(FALSE);\n");
+
+    fprintf(fp, "    TRACE(\"%s(", name.c_str());
+    bool first = true;
+    int iarg = 1;
+    for (auto& param : fn.params)
+    {
+        if (!first)
+            fprintf(fp, ", ");
+        if (param == "...")
+        {
+            fprintf(fp, "...");
+            break;
+        }
+        split(fields, param, ':');
+
+        if (fields[2].empty())
+            fprintf(fp, "arg%d=", iarg);
+        else
+            fprintf(fp, "%s=", fields[2].c_str());
+        DoWriteSpecifier(fp, fields);
+        first = false;
+        ++iarg;
+    }
+
+    if (fn.params.empty())
+        fprintf(fp, ")\\n\"");
+    else
+        fprintf(fp, ")\\n\",\n          ");
+
+    first = true;
+    iarg = 1;
+    for (auto& param : fn.params)
+    {
+        if (param == "...")
+            break;
+        if (!first)
+            fprintf(fp, ", ");
+        split(fields, param, ':');
+        if (fields[2].empty())
+            fprintf(fp, "arg%d", iarg);
+        else
+            fprintf(fp, "%s", fields[2].c_str());
+        first = false;
+        ++iarg;
+    }
+    fprintf(fp, ");\n");
+
+    fprintf(fp, "    ret = %s(", vname.c_str());
+    first = true;
+    iarg = 1;
+    for (auto& param : fn.params)
+    {
+        if (!first)
+            fprintf(fp, ", ");
+        if (param == "...")
+        {
+            fprintf(fp, "va");
+            break;
+        }
+        split(fields, param, ':');
+        if (fields[2].empty())
+            fprintf(fp, "arg%d", iarg);
+        else
+            fprintf(fp, "%s", fields[2].c_str());
+        first = false;
+        ++iarg;
+    }
+    fprintf(fp, ");\n");
+
+    fprintf(fp, "    TRACE(\"%s returned ", name.c_str());
+    split(fields, fn.ret, ':');
+    DoWriteSpecifier(fp, fields);
+    fprintf(fp, "\\n\", ret);\n");
+
+    fprintf(fp, "    DoEnableHook(TRUE);\n");
+    fprintf(fp, "    va_end(va);\n");
 
     if (fields[0] != "v")
         fprintf(fp, "    return ret;\n");
@@ -355,7 +488,7 @@ BOOL DoWriteDetourFunctionHead(FILE *fp, std::string& name, FUNCTION& fn)
                 fprintf(fp, ", ");
             if (param == "...")
             {
-                fprintf(fp, "%s\n", param.c_str());
+                fprintf(fp, "%s", param.c_str());
                 break;
             }
 
@@ -373,6 +506,11 @@ BOOL DoWriteDetourFunctionHead(FILE *fp, std::string& name, FUNCTION& fn)
     return TRUE;
 }
 
+BOOL IsEllipseFunction(FUNCTION& fn)
+{
+    return fn.params.size() >= 2 && fn.params[fn.params.size() - 1] == "...";
+}
+
 BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
 {
     for (auto& name : names)
@@ -387,7 +525,10 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
 
         fprintf(fp, "{\n");
 
-        DoWriteDetourFunctionBody(fp, name, fn);
+        if (IsEllipseFunction(fn))
+            DoWriteDetourEllipseFunctionBody(fp, name, fn);
+        else
+            DoWriteDetourFunctionBody(fp, name, fn);
 
         fprintf(fp, "}\n\n");
     }
