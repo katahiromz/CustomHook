@@ -2,6 +2,9 @@
 #include "../config.h"
 #include "../minhook/include/MinHook.h"
 
+BOOL DoHook(BOOL bHook);
+BOOL DoEnableHook(BOOL bEnable);
+
 #include "trace.hpp"
 #include "hookbody.hpp"
 
