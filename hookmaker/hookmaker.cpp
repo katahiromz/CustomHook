@@ -256,7 +256,7 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
         fprintf(fp, "%s %s\n", ret.c_str(), fn.convention.c_str());
         fprintf(fp, "Detour%s(", name.c_str());
 
-        bool first = true, ellipse = false;
+        bool first = true;
         int number = 1;
         if (fn.params.empty())
         {
@@ -270,23 +270,20 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
                     fprintf(fp, ", ");
                 if (param == "...")
                 {
-                    ellipse = true;
                     fprintf(fp, "%s\n", param.c_str());
                     break;
                 }
                 split(fields, param, ':');
-                fprintf(fp, "%s %s", fields[1].c_str(), fields[2].c_str());
+                if (fields[2].empty())
+                    fprintf(fp, "%s arg%d", fields[1].c_str(), number);
+                else
+                    fprintf(fp, "%s %s", fields[1].c_str(), fields[2].c_str());
                 first = false;
                 ++number;
             }
         }
         fprintf(fp, ")\n");
         fprintf(fp, "{\n");
-
-        if (ellipse)
-        {
-            // TODO:
-        }
 
         split(fields, fn.ret, ':');
         if (fields[0] != "v")
@@ -307,7 +304,10 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
             }
             split(fields, param, ':');
 
-            fprintf(fp, "%s=", fields[2].c_str());
+            if (fields[2].empty())
+                fprintf(fp, "arg%d=", number);
+            else
+                fprintf(fp, "%s=", fields[2].c_str());
             DoWriteSpecifier(fp, fields);
             first = false;
             ++number;
@@ -329,7 +329,10 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
                 break;
             }
             split(fields, param, ':');
-            fprintf(fp, "%s", fields[2].c_str());
+            if (fields[2].empty())
+                fprintf(fp, "arg%d", number);
+            else
+                fprintf(fp, "%s", fields[2].c_str());
             first = false;
             ++number;
         }
@@ -348,7 +351,10 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
                 break;
             }
             split(fields, param, ':');
-            fprintf(fp, "%s", fields[2].c_str());
+            if (fields[2].empty())
+                fprintf(fp, "arg%d", number);
+            else
+                fprintf(fp, "%s", fields[2].c_str());
             first = false;
             ++number;
         }
