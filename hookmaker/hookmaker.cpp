@@ -151,7 +151,7 @@ BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
     return TRUE;
 }
 
-BOOL DoWriteFunctionTypes(FILE *fp, std::vector<std::string>& names)
+BOOL DoWriteFunctionTypes(FILE *fp, const std::vector<std::string>& names)
 {
     for (auto& name : names)
     {
@@ -190,7 +190,7 @@ BOOL DoWriteFunctionTypes(FILE *fp, std::vector<std::string>& names)
     return TRUE;
 }
 
-BOOL DoWriteFunctionVariables(FILE *fp, std::vector<std::string>& names)
+BOOL DoWriteFunctionVariables(FILE *fp, const std::vector<std::string>& names)
 {
     for (auto& name : names)
     {
@@ -237,7 +237,7 @@ BOOL DoWriteSpecifier(FILE *fp, std::vector<std::string>& fields)
     return TRUE;
 }
 
-BOOL DoWriteDetourFunctionBody(FILE *fp, std::string& name, FUNCTION& fn)
+BOOL DoWriteDetourFunctionBody(FILE *fp, const std::string& name, const FUNCTION& fn)
 {
     std::vector<std::string> fields;
     split(fields, fn.ret, ':');
@@ -366,7 +366,7 @@ static const std::map<std::string, std::string> s_ellipse_map =
     { "wnsprintfW", "wvnsprintfW" },
 };
 
-BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, std::string& name, FUNCTION& fn)
+BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, const std::string& name, const FUNCTION& fn)
 {
     auto it = s_ellipse_map.find(name);
     if (it == s_ellipse_map.end())
@@ -480,7 +480,7 @@ BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, std::string& name, FUNCTION& fn)
     return TRUE;
 }
 
-BOOL DoWriteDetourFunctionHead(FILE *fp, std::string& name, FUNCTION& fn)
+BOOL DoWriteDetourFunctionHead(FILE *fp, const std::string& name, const FUNCTION& fn)
 {
     std::vector<std::string> fields;
     split(fields, fn.ret, ':');
@@ -524,12 +524,12 @@ BOOL DoWriteDetourFunctionHead(FILE *fp, std::string& name, FUNCTION& fn)
     return TRUE;
 }
 
-BOOL IsEllipseFunction(FUNCTION& fn)
+BOOL IsEllipseFunction(const FUNCTION& fn)
 {
     return fn.params.size() >= 2 && fn.params[fn.params.size() - 1] == "...";
 }
 
-BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
+BOOL DoWriteDetourFunctions(FILE *fp, const std::vector<std::string>& names)
 {
     for (auto& name : names)
     {
@@ -553,7 +553,7 @@ BOOL DoWriteDetourFunctions(FILE *fp, std::vector<std::string>& names)
     return TRUE;
 }
 
-BOOL DoWriteDoHook(FILE *fp, std::vector<std::string>& names)
+BOOL DoWriteDoHook(FILE *fp, const std::vector<std::string>& names)
 {
     fprintf(fp, "BOOL DoHook(BOOL bHook)\n");
     fprintf(fp, "{\n");
@@ -579,7 +579,7 @@ BOOL DoWriteDoHook(FILE *fp, std::vector<std::string>& names)
     return TRUE;
 }
 
-BOOL DoWriteDoEnableHook(FILE *fp, std::vector<std::string>& names)
+BOOL DoWriteDoEnableHook(FILE *fp, const std::vector<std::string>& names)
 {
     fprintf(fp, "BOOL DoEnableHook(BOOL bEnable)\n");
     fprintf(fp, "{\n");
