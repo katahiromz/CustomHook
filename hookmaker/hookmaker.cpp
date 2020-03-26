@@ -341,6 +341,7 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, const std::string& name, const FUNCTION
 
 static const std::map<std::string, std::string> s_ellipse_map =
 {
+    // TODO: Add more...
     { "_fprintf_l", "_vfprintf_l" },
     { "_fprintf_p", "_vfprintf_p" },
     { "_fprintf_p_l", "_vfprintf_p_l" },
