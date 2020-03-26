@@ -8,22 +8,23 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 //////////////////////////////////////////////////////////////////////////////
 // RT_DIALOG
 
-1 DIALOG 0, 0, 180, 265
-CAPTION "CustomHook hookmaker ver.0.0"
+1 DIALOG 0, 0, 190, 270
+CAPTION "CustomHook hookmaker ver.0.1"
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 FONT 9, "MS UI Gothic"
 {
-    LTEXT "(1) フックしたい関数を検索して候補から選んで下さい。", IDC_STATIC, 5, 5, 170, 25
-    LTEXT "検索文字列(&S):", IDC_STATIC, 5, 37, 60, 12
-    EDITTEXT edt1, 70, 35, 105, 14, ES_AUTOHSCROLL
-    LTEXT "候補(&C):", IDC_STATIC, 5, 57, 60, 12
-    LISTBOX lst1, 70, 55, 105, 60, LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | LBS_MULTIPLESEL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "(2) 選択した関数を追加(&A)", psh1, 5, 120, 170, 14
-    LTEXT "フックする関数(&F):", IDC_STATIC, 5, 140, 75, 10
-    LISTBOX lst2, 5, 155, 170, 60, LBS_NOSEL | LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | WS_VSCROLL
-    PUSHBUTTON "(3) ファイル payload/hookbody.hpp を更新(&U)", psh2, 5, 220, 170, 20
-    PUSHBUTTON "(4) 終了(&X)", IDCANCEL, 105, 245, 70, 14
-    PUSHBUTTON "クリア(&L)", psh3, 115, 137, 60, 14
+    LTEXT "検索文字列(&S):", IDC_STATIC, 5, 7, 60, 12
+    EDITTEXT edt1, 70, 5, 115, 14, ES_AUTOHSCROLL
+    LTEXT "候補(&C):", IDC_STATIC, 5, 27, 60, 12
+    LISTBOX lst1, 70, 25, 115, 62, LBS_EXTENDEDSEL | LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "EXE/DLL\nファイルを\n読み込む(&E)...", psh1, 5, 45, 60, 40, BS_MULTILINE
+    PUSHBUTTON "選択した候補を追加(&A)↓", psh2, 85, 90, 100, 14
+    LTEXT "フックする関数(&F):", IDC_STATIC, 5, 117, 60, 11
+    LISTBOX lst2, 70, 115, 115, 105, LBS_EXTENDEDSEL | LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "ファイル「payload/hookbody.hpp」を更新(&U)", psh3, 5, 225, 180, 20
+    PUSHBUTTON "終了(&X)", IDCANCEL, 125, 250, 60, 14
+    PUSHBUTTON "削除(&D)", psh4, 5, 185, 60, 14
+    PUSHBUTTON "すべてクリア(&L)", psh5, 5, 205, 60, 14
 }
 
 //////////////////////////////////////////////////////////////////////////////

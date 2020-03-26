@@ -718,9 +718,38 @@ void OnUpdateFile(HWND hwnd)
     }
 }
 
-void OnClear(HWND hwnd)
+void OnDelete(HWND hwnd)
+{
+    INT nCount = (INT)SendDlgItemMessageA(hwnd, lst2, LB_GETSELCOUNT, 0, 0);
+    if (nCount <= 0)
+    {
+        return;
+    }
+
+    std::vector<INT> selection;
+    selection.resize(nCount);
+    INT ret = (INT)SendDlgItemMessageA(hwnd, lst2, LB_GETSELITEMS, nCount, (LPARAM)&selection[0]);
+    if (ret == LB_ERR)
+    {
+        MessageBoxW(hwnd, L"Internal error.", NULL, MB_ICONERROR);
+        return;
+    }
+
+    std::vector<std::string> functions;
+    char szBuff[256];
+    for (INT i = nCount - 1; i >= 0; --i)
+    {
+        SendDlgItemMessageA(hwnd, lst2, LB_DELETESTRING, selection[i], 0);
+    }
+}
+
+void OnClearAll(HWND hwnd)
 {
     SendDlgItemMessageA(hwnd, lst2, LB_RESETCONTENT, 0, 0);
+}
+
+void OnLoadFromExeFile(HWND hwnd)
+{
 }
 
 void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
@@ -734,13 +763,19 @@ void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         OnEdt1(hwnd);
         break;
     case psh1:
-        OnAdd(hwnd);
+        OnLoadFromExeFile(hwnd);
         break;
     case psh2:
-        OnUpdateFile(hwnd);
+        OnAdd(hwnd);
         break;
     case psh3:
-        OnClear(hwnd);
+        OnUpdateFile(hwnd);
+        break;
+    case psh4:
+        OnDelete(hwnd);
+        break;
+    case psh5:
+        OnClearAll(hwnd);
         break;
     }
 }
