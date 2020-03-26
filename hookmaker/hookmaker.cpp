@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
+#include <commdlg.h>
 #include <shlwapi.h>
 #include <tchar.h>
 #include <string>
@@ -748,8 +749,27 @@ void OnClearAll(HWND hwnd)
     SendDlgItemMessageA(hwnd, lst2, LB_RESETCONTENT, 0, 0);
 }
 
-void OnLoadFromExeFile(HWND hwnd)
+BOOL DoLoadFile(HWND hwnd, LPCWSTR pszFile)
 {
+    return TRUE;
+}
+
+void OnLoadFromFile(HWND hwnd)
+{
+    WCHAR szFile[MAX_PATH] = L"";
+    OPENFILENAMEW ofn = { OPENFILENAME_SIZE_VERSION_400W };
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFilter = L"EXE/DLL files (*.exe;*.dll)\0*.exe;*.dll\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = ARRAYSIZE(szFile);
+    ofn.lpstrTitle = L"Load from file";
+    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST |
+                OFN_HIDEREADONLY | OFN_ENABLESIZING;
+    ofn.lpstrDefExt = L"exe";
+    if (GetOpenFileNameW(&ofn))
+    {
+        DoLoadFile(hwnd, szFile);
+    }
 }
 
 void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
@@ -760,10 +780,13 @@ void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         EndDialog(hwnd, id);
         break;
     case edt1:
-        OnEdt1(hwnd);
+        if (codeNotify == EN_CHANGE)
+        {
+            OnEdt1(hwnd);
+        }
         break;
     case psh1:
-        OnLoadFromExeFile(hwnd);
+        OnLoadFromFile(hwnd);
         break;
     case psh2:
         OnAdd(hwnd);
