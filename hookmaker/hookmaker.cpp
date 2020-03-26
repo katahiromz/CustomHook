@@ -546,6 +546,21 @@ BOOL IsEllipseFunction(const FUNCTION& fn)
     return fn.params.size() >= 2 && fn.params[fn.params.size() - 1] == "...";
 }
 
+BOOL DoWriteDetourFunction(FILE *fp, const std::string& name, const FUNCTION& fn)
+{
+    DoWriteDetourFunctionHead(fp, name, fn);
+
+    fprintf(fp, "{\n");
+
+    if (IsEllipseFunction(fn))
+        DoWriteDetourEllipseFunctionBody(fp, name, fn);
+    else
+        DoWriteDetourFunctionBody(fp, name, fn);
+
+    fprintf(fp, "}\n\n");
+    return TRUE;
+}
+
 BOOL DoWriteDetourFunctions(FILE *fp, const std::vector<std::string>& names)
 {
     for (auto& name : names)
@@ -556,16 +571,7 @@ BOOL DoWriteDetourFunctions(FILE *fp, const std::vector<std::string>& names)
 
         auto& fn = it->second;
 
-        DoWriteDetourFunctionHead(fp, name, fn);
-
-        fprintf(fp, "{\n");
-
-        if (IsEllipseFunction(fn))
-            DoWriteDetourEllipseFunctionBody(fp, name, fn);
-        else
-            DoWriteDetourFunctionBody(fp, name, fn);
-
-        fprintf(fp, "}\n\n");
+        DoWriteDetourFunction(fp, name, fn);
     }
     return TRUE;
 }
