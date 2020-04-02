@@ -58,6 +58,6 @@ endif()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
                ${CMAKE_CURRENT_SOURCE_DIR}/config.h)
 
-subdirs(minhook hookmaker payload injector target)
+subdirs(CodeReverse2 minhook hookmaker payload injector target)
 
 ##############################################################################

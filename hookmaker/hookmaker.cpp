@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <vector>
 #include <map>
+#include "../CodeReverse2/PEModule.h"
 
 struct FUNCTION
 {
