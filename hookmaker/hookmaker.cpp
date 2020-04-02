@@ -745,11 +745,27 @@ BOOL DoRebuildPayload(HWND hwnd)
     WCHAR szText[2 * MAX_PATH];
     StringCbPrintfW(szText, sizeof(szText), L"cmd.exe /k \"%s\"", rosbe_cmd);
 
-    WCHAR szPath[MAX_PATH];
-    GetModuleFileNameW(NULL, szPath, ARRAYSIZE(szPath));
-    PathRemoveFileSpecW(szPath);
-    PathRemoveFileSpecW(szPath);
+    WCHAR szDir[MAX_PATH], szPath[MAX_PATH];
+    GetModuleFileNameW(NULL, szDir, ARRAYSIZE(szDir));
+    PathRemoveFileSpecW(szDir);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
     PathAppendW(szPath, L"payload");
+    if (!PathIsDirectoryW(szPath))
+    {
+        StringCbCopyW(szPath, sizeof(szPath), szDir);
+        PathAppendW(szPath, L"..\\payload");
+        if (!PathIsDirectoryW(szPath))
+        {
+            StringCbCopyW(szPath, sizeof(szPath), szDir);
+            PathAppendW(szPath, L"..\\..\\payload");
+            if (!PathIsDirectoryW(szPath))
+            {
+                MessageBoxW(hwnd, LoadStringDx(IDS_CANTFINDPAYLOAD), NULL, MB_ICONERROR);
+                return FALSE;
+            }
+        }
+    }
     //MessageBoxW(NULL, szPath, NULL, 0);
 
     MProcessMaker pmaker;

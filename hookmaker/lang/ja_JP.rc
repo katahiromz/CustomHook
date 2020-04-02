@@ -43,6 +43,7 @@ STRINGTABLE
     IDS_CANTOPENROSBE, "RosBE が開けません。"
     IDS_PAYLOADUPDATED, "payload を再構築しました。"
     IDS_PAYLOADBUILDFAIL, "payload の再構築に失敗しました。"
+    IDS_CANTFINDPAYLOAD, "payload が見つかりません。"
 }
 
 //////////////////////////////////////////////////////////////////////////////

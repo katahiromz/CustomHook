@@ -43,6 +43,7 @@ STRINGTABLE
     IDS_CANTOPENROSBE, "Cannot open RosBE."
     IDS_PAYLOADUPDATED, "Build of payload is successfully done."
     IDS_PAYLOADBUILDFAIL, "Failed to rebuild payload."
+    IDS_CANTFINDPAYLOAD, "Cannot find payload."
 }
 
 //////////////////////////////////////////////////////////////////////////////

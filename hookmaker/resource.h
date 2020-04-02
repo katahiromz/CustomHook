@@ -16,6 +16,7 @@
 #define IDS_CANTOPENROSBE                   108
 #define IDS_PAYLOADUPDATED                  109
 #define IDS_PAYLOADBUILDFAIL                110
+#define IDS_CANTFINDPAYLOAD                 111
 
 #ifdef APSTUDIO_INVOKED
     #ifndef APSTUDIO_READONLY_SYMBOLS
