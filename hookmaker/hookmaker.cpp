@@ -718,7 +718,7 @@ void OnEdt1(HWND hwnd)
     DoUpdateList(hwnd, szTextA);
 }
 
-BOOL DoRebuildPayload(HWND hwnd)
+LPCWSTR FindRosBECmd(void)
 {
     LPCWSTR paths[] = {
         L"C:\\RosBE\\RosBE.cmd",
@@ -726,53 +726,70 @@ BOOL DoRebuildPayload(HWND hwnd)
         L"C:\\Program Files (x86)\\RosBE\\RosBE.cmd"
     };
 
-    LPCWSTR rosbe_cmd = NULL;
+    LPCWSTR ret = NULL;
     for (auto path : paths)
     {
         if (PathFileExistsW(path))
         {
-            rosbe_cmd = path;
+            ret = path;
             break;
         }
     }
 
-    if (!rosbe_cmd)
-    {
-        MessageBoxW(hwnd, LoadStringDx(IDS_CANTFINDROSBE), NULL, MB_ICONERROR);
-        return FALSE;
-    }
+    return ret;
+}
 
-    WCHAR szText[2 * MAX_PATH];
-    StringCbPrintfW(szText, sizeof(szText), L"cmd.exe /k \"%s\"", rosbe_cmd);
-
-    WCHAR szDir[MAX_PATH], szPath[MAX_PATH];
+BOOL FindPayloadFolder(LPWSTR pszPath)
+{
+    WCHAR szDir[MAX_PATH];
     GetModuleFileNameW(NULL, szDir, ARRAYSIZE(szDir));
     PathRemoveFileSpecW(szDir);
 
-    StringCbCopyW(szPath, sizeof(szPath), szDir);
-    PathAppendW(szPath, L"payload");
-    if (!PathIsDirectoryW(szPath))
+    // find payload folder
+    StringCchCopyW(pszPath, MAX_PATH, szDir);
+    PathAppendW(pszPath, L"payload");
+    if (!PathIsDirectoryW(pszPath))
     {
-        StringCbCopyW(szPath, sizeof(szPath), szDir);
-        PathAppendW(szPath, L"..\\payload");
-        if (!PathIsDirectoryW(szPath))
+        StringCchCopyW(pszPath, MAX_PATH, szDir);
+        PathAppendW(pszPath, L"..\\payload");
+        if (!PathIsDirectoryW(pszPath))
         {
-            StringCbCopyW(szPath, sizeof(szPath), szDir);
-            PathAppendW(szPath, L"..\\..\\payload");
-            if (!PathIsDirectoryW(szPath))
+            StringCchCopyW(pszPath, MAX_PATH, szDir);
+            PathAppendW(pszPath, L"..\\..\\payload");
+            if (!PathIsDirectoryW(pszPath))
             {
-                MessageBoxW(hwnd, LoadStringDx(IDS_CANTFINDPAYLOAD), NULL, MB_ICONERROR);
                 return FALSE;
             }
         }
     }
-    //MessageBoxW(NULL, szPath, NULL, 0);
 
+    return TRUE;
+}
+
+BOOL ExecuteRosBEAndBuildPayload(HWND hwnd, LPCWSTR pszPath, LPCWSTR rosbe_cmd)
+{
+#ifdef _WIN64
+    #define PAYLOAD_DLL L"payload64.dll"
+#else
+    #define PAYLOAD_DLL L"payload32.dll"
+#endif
+
+    // src pathname
+    WCHAR szSrcFile[MAX_PATH];
+    StringCbCopyW(szSrcFile, sizeof(szSrcFile), pszPath);
+    PathAppendW(szSrcFile, PAYLOAD_DLL);
+    DeleteFileW(szSrcFile);
+
+    // prepare process creation
     MProcessMaker pmaker;
     pmaker.SetShowWindow(SW_HIDE);
-    pmaker.SetCurrentDirectory(szPath);
+    pmaker.SetCurrentDirectory(pszPath);
     pmaker.SetCreationFlags(CREATE_NEW_CONSOLE);
 
+    WCHAR szText[2 * MAX_PATH];
+    StringCbPrintfW(szText, sizeof(szText), L"cmd.exe /k \"%s\"", rosbe_cmd);
+
+    // create process
     MFile input, output;
     if (!pmaker.PrepareForRedirect(&input, &output, &output) ||
         !pmaker.CreateProcessDx(NULL, szText))
@@ -781,40 +798,61 @@ BOOL DoRebuildPayload(HWND hwnd)
         return FALSE;
     }
 
-    input.WriteFormatA("cd \"%ls\"\n", szPath);
+    // write input
+    input.WriteFormatA("cd \"%ls\"\n", pszPath);
     input.WriteFormatA("if exist CMakeCache.txt del CMakeCache.txt\n");
     input.WriteFormatA("cmake -G \"Ninja\"\n");
     input.WriteFormatA("ninja\n");
     input.CloseHandle();
+
+    // wait
     pmaker.WaitForSingleObject();
 
     std::string strOutput;
     pmaker.ReadAll(strOutput, output);
     pmaker.CloseAll();
-
     //MessageBoxA(NULL, strOutput.c_str(), NULL, 0);
 
-#ifdef _WIN64
-    #define PAYLOAD_DLL L"payload64.dll"
-#else
-    #define PAYLOAD_DLL L"payload32.dll"
-#endif
-    PathAppendW(szPath, PAYLOAD_DLL);
+    // dest pathname
+    WCHAR szDestFile[MAX_PATH];
+    GetModuleFileNameW(NULL, szDestFile, ARRAYSIZE(szDestFile));
+    PathRemoveFileSpecW(szDestFile);
+    PathAppendW(szDestFile, PAYLOAD_DLL);
 
-    WCHAR szFile[MAX_PATH];
-    GetModuleFileNameW(NULL, szFile, ARRAYSIZE(szFile));
-    PathRemoveFileSpecW(szFile);
-    PathAppendW(szFile, PAYLOAD_DLL);
+    // copy a file
+    if (!CopyFileW(szSrcFile, szDestFile, FALSE))
+        return FALSE;
 
-    if (lstrcmpiW(szPath, szFile) == 0 || CopyFileW(szPath, szFile, FALSE))
+    return TRUE;
+#undef PAYLOAD_DLL
+}
+
+BOOL DoRebuildPayload(HWND hwnd)
+{
+    LPCWSTR rosbe_cmd = FindRosBECmd();
+    if (!rosbe_cmd)
     {
-        MessageBoxW(NULL, LoadStringDx(IDS_PAYLOADUPDATED),
-                    LoadStringDx(IDS_APPNAME), MB_ICONINFORMATION);
-        return TRUE;
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTFINDROSBE), NULL, MB_ICONERROR);
+        return FALSE;
     }
 
-    MessageBoxW(NULL, LoadStringDx(IDS_PAYLOADBUILDFAIL), NULL, MB_ICONERROR);
-    return FALSE;
+    WCHAR szPath[MAX_PATH];
+    if (!FindPayloadFolder(szPath))
+    {
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTFINDPAYLOAD), NULL, MB_ICONERROR);
+        return FALSE;
+    }
+    //MessageBoxW(NULL, szPath, NULL, 0);
+
+    if (!ExecuteRosBEAndBuildPayload(hwnd, szPath, rosbe_cmd))
+    {
+        MessageBoxW(NULL, LoadStringDx(IDS_PAYLOADBUILDFAIL), NULL, MB_ICONERROR);
+        return FALSE;
+    }
+
+    MessageBoxW(NULL, LoadStringDx(IDS_PAYLOADUPDATED),
+                LoadStringDx(IDS_APPNAME), MB_ICONINFORMATION);
+    return TRUE;
 }
 
 void OnUpdateFile(HWND hwnd)
