@@ -771,7 +771,7 @@ BOOL DoRebuildPayload(HWND hwnd)
     }
 
     input.WriteFormatA("cd \"%ls\"\n", szPath);
-    input.WriteFormatA("del CMakeCache.txt\n");
+    input.WriteFormatA("if exist CMakeCache.txt del CMakeCache.txt\n");
     input.WriteFormatA("cmake -G \"Ninja\"\n");
     input.WriteFormatA("ninja\n");
     input.CloseHandle();
