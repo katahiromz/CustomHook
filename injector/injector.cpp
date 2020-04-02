@@ -239,6 +239,8 @@ void OnInject(HWND hwnd, BOOL bInject)
 
 BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 {
+    DragAcceptFiles(hwnd, TRUE);
+
     WCHAR szExeFile[MAX_PATH];
     GetModuleFileNameW(NULL, szExeFile, MAX_PATH);
     PathRemoveFileSpecW(szExeFile);
@@ -329,6 +331,16 @@ void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     }
 }
 
+void OnDropFiles(HWND hwnd, HDROP hdrop)
+{
+    WCHAR szPath[MAX_PATH];
+    DragQueryFile(hdrop, 0, szPath, MAX_PATH);
+
+    SetDlgItemTextW(hwnd, edt2, szPath);
+
+    DragFinish(hdrop);
+}
+
 INT_PTR CALLBACK
 DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -336,6 +348,7 @@ DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
         HANDLE_MSG(hwnd, WM_INITDIALOG, OnInitDialog);
         HANDLE_MSG(hwnd, WM_COMMAND, OnCommand);
+        HANDLE_MSG(hwnd, WM_DROPFILES, OnDropFiles);
     }
     return 0;
 }
