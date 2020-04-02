@@ -7,13 +7,16 @@ static FN_MessageBoxW fn_MessageBoxW = NULL;
 int __stdcall
 DetourMessageBoxW(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT uType)
 {
+    DWORD dwLastError;
     int ret;
     DoEnableHook(FALSE);
     TRACE("MessageBoxW(hWnd=%p, lpText=%p, lpCaption=%p, uType=%u)\n",
           hWnd, lpText, lpCaption, uType);
     ret = fn_MessageBoxW(hWnd, lpText, lpCaption, uType);
+    dwLastError = GetLastError();
     TRACE("MessageBoxW returned %d\n", ret);
     DoEnableHook(TRUE);
+    SetLastError(dwLastError);
     return ret;
 }
 

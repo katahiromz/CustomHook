@@ -9,6 +9,7 @@
 #include <vector>
 #include <cassert>
 #include <map>
+#include <algorithm>
 #include "../CodeReverse2/PEModule.h"
 #include "MProcessMaker.hpp"
 #include "resource.h"
@@ -263,6 +264,7 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, const std::string& name, const FUNCTION
     std::vector<std::string> fields;
     split(fields, fn.ret, ':');
 
+    fprintf(fp, "    DWORD dwLastError;\n", fields[1].c_str());
     if (fields[0] != "v")
         fprintf(fp, "    %s ret;\n", fields[1].c_str());
 
@@ -343,6 +345,8 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, const std::string& name, const FUNCTION
     }
     fprintf(fp, ");\n");
 
+    fprintf(fp, "    dwLastError = GetLastError();\n");
+
     split(fields, fn.ret, ':');
     if (fields[0] != "v")
     {
@@ -353,6 +357,7 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, const std::string& name, const FUNCTION
     }
 
     fprintf(fp, "    DoEnableHook(TRUE);\n");
+    fprintf(fp, "    SetLastError(dwLastError);\n");
 
     if (fields[0] != "v")
         fprintf(fp, "    return ret;\n");
@@ -416,6 +421,7 @@ BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, const std::string& name, const F
 
     fprintf(fp, "    va_list va;\n");
 
+    fprintf(fp, "    DWORD dwLastError;\n", fields[1].c_str());
     if (fields[0] != "v")
         fprintf(fp, "    %s ret;\n", fields[1].c_str());
 
@@ -500,6 +506,8 @@ BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, const std::string& name, const F
     }
     fprintf(fp, ");\n");
 
+    fprintf(fp, "    dwLastError = GetLastError();\n");
+
     split(fields, fn.ret, ':');
     if (fields[0] != "v")
     {
@@ -510,6 +518,7 @@ BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, const std::string& name, const F
     }
 
     fprintf(fp, "    DoEnableHook(TRUE);\n");
+    fprintf(fp, "    SetLastError(dwLastError);\n");
     fprintf(fp, "    va_end(va);\n");
 
     if (fields[0] != "v")
@@ -650,6 +659,15 @@ BOOL DoWriteDoEnableHook(FILE *fp, const std::vector<std::string>& names)
 
 BOOL DoUpdateFile(HWND hwnd, std::vector<std::string>& names)
 {
+    std::vector<std::string> excludes =
+    {
+        "GetLastError",
+    };
+    for (auto& item : excludes)
+    {
+        names.erase(std::remove(names.begin(), names.end(), item), names.end());
+    }
+
     WCHAR szPath[MAX_PATH];
     if (!GetWondersDirectory(szPath, ARRAYSIZE(szPath)))
     {
@@ -823,8 +841,11 @@ BOOL ExecuteRosBEAndBuildPayload(HWND hwnd, LPCWSTR pszPath, LPCWSTR rosbe_cmd)
 
     std::string strOutput;
     pmaker.ReadAll(strOutput, output);
+    DWORD dwExitCode = pmaker.GetExitCode();
     pmaker.CloseAll();
-    //MessageBoxA(NULL, strOutput.c_str(), NULL, 0);
+
+    if (dwExitCode)
+        MessageBoxA(NULL, strOutput.c_str(), NULL, 0);
 
     // dest pathname
     WCHAR szDestFile[MAX_PATH];
