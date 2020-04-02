@@ -36,6 +36,7 @@ Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
+Source: "README.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "build\MinHook.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "build\hookmaker.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "build\injector.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -92,6 +93,7 @@ Source: "WondersXP\vars-cl-64-w.dat"; DestDir: "{app}\WondersXP"; Flags: ignorev
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
+Name: "{group}\README.txt"; Filename: "{app}\README.txt"
 Name: "{group}\hookmaker"; Filename: "{app}\hookmaker.exe"
 Name: "{group}\injector"; Filename: "{app}\injector.exe"
 Name: "{group}\target"; Filename: "{app}\target.exe"
