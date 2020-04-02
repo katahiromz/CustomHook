@@ -20,6 +20,7 @@ AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName=C:\{#MyAppName}
+DefaultGroupName=CustomHook
 DisableProgramGroupPage=yes
 LicenseFile=LICENSE.txt
 OutputDir=.
@@ -91,7 +92,9 @@ Source: "WondersXP\vars-cl-64-w.dat"; DestDir: "{app}\WondersXP"; Flags: ignorev
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{commonprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\hookmaker"; Filename: "{app}\hookmaker.exe"
+Name: "{group}\injector"; Filename: "{app}\injector.exe"
+Name: "{group}\target"; Filename: "{app}\target.exe"
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]

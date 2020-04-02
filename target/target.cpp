@@ -19,7 +19,7 @@ void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         EndDialog(hwnd, IDCANCEL);
         break;
     case psh1:
-        MessageBoxW(hwnd, L"Not hooked.", L"target", MB_ICONINFORMATION);
+        MessageBoxW(hwnd, L"This is target MessageBoxW.", L"Hellos", MB_ICONINFORMATION);
         break;
     }
 }
