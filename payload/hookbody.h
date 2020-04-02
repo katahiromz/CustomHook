@@ -10,7 +10,7 @@ DetourMessageBoxW(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT uType)
     DWORD dwLastError;
     int ret;
     DoEnableHook(FALSE);
-    TRACE("MessageBoxW(hWnd=%p, lpText=%p, lpCaption=%p, uType=%u)\n",
+    TRACE("MessageBoxW(hWnd=%p, lpText='%ls', lpCaption='%ls', uType=%u)\n",
           hWnd, lpText, lpCaption, uType);
     ret = fn_MessageBoxW(hWnd, lpText, lpCaption, uType);
     dwLastError = GetLastError();

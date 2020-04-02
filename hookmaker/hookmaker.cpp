@@ -229,31 +229,45 @@ BOOL DoWriteSpecifier(FILE *fp, std::vector<std::string>& fields)
     case 'i':
         if (fields[0] == "i64")
         {
-            fprintf(fp, "%%I64d", fields[2].c_str());
+            fprintf(fp, "%%I64d");
         }
         else
         {
-            fprintf(fp, "%%d", fields[2].c_str());
+            fprintf(fp, "%%d");
         }
         break;
     case 'u':
         if (fields[0] == "u64")
         {
-            fprintf(fp, "%%I64u", fields[2].c_str());
+            fprintf(fp, "%%I64u");
         }
         else
         {
-            fprintf(fp, "%%u", fields[2].c_str());
+            fprintf(fp, "%%u");
         }
         break;
     case 'f':
-        fprintf(fp, "%%f", fields[2].c_str());
+        fprintf(fp, "%%f");
         break;
     case 'p': case 'h':
-        fprintf(fp, "%%p", fields[2].c_str());
+        if (fields[1] == "LPCSTR" ||
+            fields[1] == "const char*" ||
+            fields[1] == "const CHAR*")
+        {
+            fprintf(fp, "'%%s'");
+            return TRUE;
+        }
+        if (fields[1] == "LPCWSTR" ||
+            fields[1] == "const wchar_t*" ||
+            fields[1] == "const WCHAR*")
+        {
+            fprintf(fp, "'%%ls'");
+            return TRUE;
+        }
+        fprintf(fp, "%%p");
         break;
     default:
-        fprintf(fp, "?", fields[2].c_str());
+        fprintf(fp, "?");
         break;
     }
     return TRUE;
