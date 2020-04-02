@@ -21,7 +21,7 @@ FONT 9, "MS Shell Dlg"
     PUSHBUTTON "&Add selected candidates:", psh2, 85, 90, 100, 14
     LTEXT "&Functions to be hooked:", IDC_STATIC, 5, 117, 60, 11
     LISTBOX lst2, 70, 115, 115, 105, LBS_EXTENDEDSEL | LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON "&Update File ""payload/hookbody.hpp""", psh3, 5, 225, 180, 20
+    DEFPUSHBUTTON "&Update File ""payload/hookbody.h""", psh3, 5, 225, 180, 20
     PUSHBUTTON "E&xit", IDCANCEL, 125, 250, 60, 14
     PUSHBUTTON "&Delete", psh4, 5, 185, 60, 14
     PUSHBUTTON "C&lear All", psh5, 5, 205, 60, 14
@@ -37,8 +37,12 @@ STRINGTABLE
     IDS_CANTWRITEHOOKBODY, "Cannot write File ""payload/hookbody.h""."
     IDS_INTERNALERROR, "Internal error."
     IDS_ADDHOOKFUNCTIONS, "Please add function(s) to be hooked."
-    IDS_HOOKBODYUPDATED, "File ""payload/hookbody.h"" is successfully updated."
+    IDS_HOOKBODYUPDATED, "File ""payload/hookbody.h"" is successfully updated.\n\nWould you like to rebuild payload?"
     IDS_APPNAME, "CustomHook hookmaker"
+    IDS_CANTFINDROSBE, "Cannot find RosBE."
+    IDS_CANTOPENROSBE, "Cannot open RosBE."
+    IDS_PAYLOADUPDATED, "Build of payload is successfully done."
+    IDS_PAYLOADBUILDFAIL, "Failed to rebuild payload."
 }
 
 //////////////////////////////////////////////////////////////////////////////

@@ -12,6 +12,10 @@
 #define IDS_ADDHOOKFUNCTIONS                104
 #define IDS_HOOKBODYUPDATED                 105
 #define IDS_APPNAME                         106
+#define IDS_CANTFINDROSBE                   107
+#define IDS_CANTOPENROSBE                   108
+#define IDS_PAYLOADUPDATED                  109
+#define IDS_PAYLOADBUILDFAIL                110
 
 #ifdef APSTUDIO_INVOKED
     #ifndef APSTUDIO_READONLY_SYMBOLS

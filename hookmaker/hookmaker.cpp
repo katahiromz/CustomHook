@@ -10,6 +10,7 @@
 #include <cassert>
 #include <map>
 #include "../CodeReverse2/PEModule.h"
+#include "MProcessMaker.hpp"
 #include "resource.h"
 
 struct FUNCTION
@@ -717,6 +718,98 @@ void OnEdt1(HWND hwnd)
     DoUpdateList(hwnd, szTextA);
 }
 
+BOOL DoRebuildPayload(HWND hwnd)
+{
+    LPCWSTR paths[] = {
+        L"C:\\RosBE\\RosBE.cmd",
+        L"C:\\Program Files\\RosBE\\RosBE.cmd",
+        L"C:\\Program Files (x86)\\RosBE\\RosBE.cmd"
+    };
+
+    LPCWSTR rosbe_cmd = NULL;
+    for (auto path : paths)
+    {
+        if (PathFileExistsW(path))
+        {
+            rosbe_cmd = path;
+            break;
+        }
+    }
+
+    if (!rosbe_cmd)
+    {
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTFINDROSBE), NULL, MB_ICONERROR);
+        return FALSE;
+    }
+
+    WCHAR szText[2 * MAX_PATH];
+    StringCbPrintfW(szText, sizeof(szText), L"cmd.exe /k \"%s\"", rosbe_cmd);
+
+    MProcessMaker pmaker;
+
+    MFile input, output;
+    if (!pmaker.PrepareForRedirect(&input, &output, &output))
+    {
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTOPENROSBE), NULL, MB_ICONERROR);
+        return FALSE;
+    }
+
+    WCHAR szPath[MAX_PATH];
+    GetModuleFileNameW(NULL, szPath, ARRAYSIZE(szPath));
+    PathRemoveFileSpecW(szPath);
+    PathRemoveFileSpecW(szPath);
+    PathAppendW(szPath, L"payload");
+    //MessageBoxW(NULL, szPath, NULL, 0);
+
+    pmaker.SetShowWindow(SW_HIDE);
+    pmaker.SetCurrentDirectory(szPath);
+    pmaker.SetCreationFlags(CREATE_NEW_CONSOLE);
+    if (!pmaker.CreateProcessDx(NULL, szText))
+    {
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTOPENROSBE), NULL, MB_ICONERROR);
+        return FALSE;
+    }
+
+    input.WriteFormatA("cd \"%ls\"\n", szPath);
+    input.WriteFormatA("del CMakeCache.txt\n");
+    input.WriteFormatA("cmake -G \"Ninja\"\n");
+    input.WriteFormatA("ninja\n");
+    input.CloseHandle();
+    pmaker.WaitForSingleObject();
+
+    std::string strOutput;
+    pmaker.ReadAll(strOutput, output);
+    pmaker.CloseAll();
+
+    //MessageBoxA(NULL, strOutput.c_str(), NULL, 0);
+
+#ifdef _WIN64
+    PathAppendW(szPath, L"payload64.dll");
+#else
+    PathAppendW(szPath, L"payload32.dll");
+#endif
+
+    WCHAR szFile[MAX_PATH];
+    GetModuleFileNameW(NULL, szFile, ARRAYSIZE(szFile));
+    PathRemoveFileSpecW(szFile);
+#ifdef _WIN64
+    PathAppendW(szFile, L"payload64.dll");
+#else
+    PathAppendW(szFile, L"payload32.dll");
+#endif
+
+    if (lstrcmpiW(szPath, szFile) == 0 ||
+        CopyFileW(szPath, szFile, FALSE))
+    {
+        MessageBoxW(NULL, LoadStringDx(IDS_PAYLOADUPDATED),
+                    LoadStringDx(IDS_APPNAME), MB_ICONINFORMATION);
+        return TRUE;
+    }
+
+    MessageBoxW(NULL, LoadStringDx(IDS_PAYLOADBUILDFAIL), NULL, MB_ICONERROR);
+    return FALSE;
+}
+
 void OnUpdateFile(HWND hwnd)
 {
     INT nCount = (INT)SendDlgItemMessageA(hwnd, lst2, LB_GETCOUNT, 0, 0);
@@ -736,8 +829,11 @@ void OnUpdateFile(HWND hwnd)
 
     if (DoUpdateFile(hwnd, functions))
     {
-        MessageBoxW(hwnd, LoadStringDx(IDS_HOOKBODYUPDATED),
-                    LoadStringDx(IDS_APPNAME), MB_ICONINFORMATION);
+        if (MessageBoxW(hwnd, LoadStringDx(IDS_HOOKBODYUPDATED),
+                        LoadStringDx(IDS_APPNAME), MB_ICONINFORMATION | MB_YESNO) == IDYES)
+        {
+            DoRebuildPayload(hwnd);
+        }
     }
 }
 

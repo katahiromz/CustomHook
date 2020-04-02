@@ -21,7 +21,7 @@ FONT 9, "MS UI Gothic"
     PUSHBUTTON "選択した候補を追加(&A)↓", psh2, 85, 90, 100, 14
     LTEXT "フックする関数(&F):", IDC_STATIC, 5, 117, 60, 11
     LISTBOX lst2, 70, 115, 115, 105, LBS_EXTENDEDSEL | LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON "ファイル「payload/hookbody.hpp」を更新(&U)", psh3, 5, 225, 180, 20
+    DEFPUSHBUTTON "ファイル「payload/hookbody.h」を更新(&U)", psh3, 5, 225, 180, 20
     PUSHBUTTON "終了(&X)", IDCANCEL, 125, 250, 60, 14
     PUSHBUTTON "削除(&D)", psh4, 5, 185, 60, 14
     PUSHBUTTON "すべてクリア(&L)", psh5, 5, 205, 60, 14
@@ -37,8 +37,12 @@ STRINGTABLE
     IDS_CANTWRITEHOOKBODY, "ファイル「payload/hookbody.h」に書き込めません。"
     IDS_INTERNALERROR, "内部エラーです。"
     IDS_ADDHOOKFUNCTIONS, "フックする関数を追加して下さい。"
-    IDS_HOOKBODYUPDATED, "ファイル「payload/hookbody.h」は正しく更新されました。"
+    IDS_HOOKBODYUPDATED, "ファイル「payload/hookbody.h」は正しく更新されました。\n\npayloadを再構築しますか?"
     IDS_APPNAME, "CustomHook hookmaker"
+    IDS_CANTFINDROSBE, "RosBE が見つかりません。"
+    IDS_CANTOPENROSBE, "RosBE が開けません。"
+    IDS_PAYLOADUPDATED, "payload を再構築しました。"
+    IDS_PAYLOADBUILDFAIL, "payload の再構築に失敗しました。"
 }
 
 //////////////////////////////////////////////////////////////////////////////
