@@ -14,6 +14,9 @@ endif(COMMAND cmake_policy)
 # project name and languages
 project(InjectDLL C CXX RC)
 
+# use C++11
+set(CMAKE_CXX_STANDARD 11)
+
 # set output directory (build/)
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
