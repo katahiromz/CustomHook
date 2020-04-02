@@ -1,6 +1,5 @@
 #include <windows.h>
 #include <windowsx.h>
-#include "../config.h"
 
 BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 {

@@ -32,3 +32,8 @@ a.txt
 *-old
 build32
 build64
+RosBE-Logs
+.ninja_deps
+.ninja_log
+*.ninja
+lib*.a

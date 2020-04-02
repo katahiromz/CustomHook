@@ -1,9 +1,9 @@
-[submodule "minhook"]
-	path = minhook
-	url = https://github.com/katahiromz/minhook.git
 [submodule "WondersXP"]
 	path = WondersXP
 	url = https://github.com/katahiromz/WondersXP.git
 [submodule "CodeReverse2"]
 	path = CodeReverse2
 	url = https://github.com/katahiromz/CodeReverse2.git
+[submodule "payload/minhook"]
+	path = payload/minhook
+	url = https://github.com/katahiromz/minhook.git

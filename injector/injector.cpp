@@ -7,7 +7,6 @@
 #include <tchar.h>
 #include <cstdlib>
 #include <cassert>
-#include "../config.h"
 
 BOOL IsWow64(HANDLE hProcess)
 {
@@ -221,7 +220,11 @@ void OnInject(HWND hwnd, BOOL bInject)
     WCHAR szDllFile[MAX_PATH];
     GetModuleFileNameW(NULL, szDllFile, MAX_PATH);
     PathRemoveFileSpecW(szDllFile);
-    PathAppendW(szDllFile, PAYLOAD_NAME L".dll");
+#ifdef _WIN64
+    PathAppendW(szDllFile, L"payload64.dll");
+#else
+    PathAppendW(szDllFile, L"payload32.dll");
+#endif
     //MessageBoxW(NULL, szDllFile, NULL, 0);
 
     if (bInject)
@@ -290,7 +293,11 @@ void OnRunWithInjection(HWND hwnd)
     WCHAR szDllFile[MAX_PATH];
     GetModuleFileNameW(NULL, szDllFile, MAX_PATH);
     PathRemoveFileSpecW(szDllFile);
-    PathAppendW(szDllFile, PAYLOAD_NAME L".dll");
+#ifdef _WIN64
+    PathAppendW(szDllFile, L"payload64.dll");
+#else
+    PathAppendW(szDllFile, L"payload32.dll");
+#endif
     //MessageBoxW(NULL, szDllFile, NULL, 0);
 
     DoInjectDLL(pi.dwProcessId, szDllFile);

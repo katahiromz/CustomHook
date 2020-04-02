@@ -1,6 +1,5 @@
 #include "win32.h"
-#include "../config.h"
-#include "../minhook/include/MinHook.h"
+#include "minhook/include/MinHook.h"
 
 BOOL DoHook(BOOL bHook);
 BOOL DoEnableHook(BOOL bEnable);

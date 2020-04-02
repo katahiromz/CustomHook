@@ -1,6 +1,16 @@
+cmake_minimum_required(VERSION 3.2)
+
+subdirs(minhook)
+
 add_library(payload SHARED payload.c)
 set_target_properties(payload PROPERTIES PREFIX "")
-set_target_properties(payload PROPERTIES OUTPUT_NAME "${PAYLOAD_NAME}")
+
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set_target_properties(payload PROPERTIES OUTPUT_NAME "payload64")
+else()
+    set_target_properties(payload PROPERTIES OUTPUT_NAME "payload32")
+endif()
+
 target_link_libraries(payload MinHook_static
     aclui
     advapi32

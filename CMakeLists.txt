@@ -45,19 +45,6 @@ endif()
 
 ##############################################################################
 
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    set(INJECTOR_NAME "injector64")
-    set(PAYLOAD_NAME "payload64")
-elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    set(INJECTOR_NAME "injector32")
-    set(PAYLOAD_NAME "payload32")
-else()
-    message(FATAL_ERROR "Your compiler is not supported yet")
-endif()
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
-               ${CMAKE_CURRENT_SOURCE_DIR}/config.h)
-
-subdirs(CodeReverse2 minhook hookmaker payload injector target)
+subdirs(CodeReverse2 hookmaker payload injector target)
 
 ##############################################################################
