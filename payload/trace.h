@@ -1,9 +1,9 @@
 #pragma once
 
 #ifndef TRACE
-    static CRITICAL_SECTION s_lock;
+    CRITICAL_SECTION s_lock;
 
-    inline void CH_Init(BOOL bInit)
+    void CH_Init(BOOL bInit)
     {
         if (bInit)
             InitializeCriticalSection(&s_lock);
@@ -11,7 +11,7 @@
             DeleteCriticalSection(&s_lock);
     }
 
-    inline void CH_TraceV(const char *fmt, va_list va)
+    void CH_TraceV(const char *fmt, va_list va)
     {
         FILE *fp;
         EnterCriticalSection(&s_lock);
@@ -23,7 +23,7 @@
         LeaveCriticalSection(&s_lock);
     }
 
-    inline void CH_Trace(const char *fmt, ...)
+    void CH_Trace(const char *fmt, ...)
     {
         va_list va;
         va_start(va, fmt);

@@ -5,8 +5,8 @@
 BOOL DoHook(BOOL bHook);
 BOOL DoEnableHook(BOOL bEnable);
 
-#include "trace.hpp"
-#include "hookbody.hpp"
+#include "trace.h"
+#include "hookbody.h"
 
 EXTERN_C BOOL WINAPI
 DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)

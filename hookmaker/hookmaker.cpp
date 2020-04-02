@@ -637,12 +637,12 @@ BOOL DoUpdateFile(HWND hwnd, std::vector<std::string>& names)
         MessageBoxW(hwnd, L"Cannot find WondersXP.", NULL, MB_ICONERROR);
         return FALSE;
     }
-    PathAppendW(szPath, L"..\\payload\\hookbody.hpp");
+    PathAppendW(szPath, L"..\\payload\\hookbody.h");
 
     FILE *fp = _wfopen(szPath, L"w");
     if (!fp)
     {
-        MessageBoxW(hwnd, L"Cannot write file payload\\hookbody.hpp.", NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, L"Cannot write file payload\\hookbody.h.", NULL, MB_ICONERROR);
         return FALSE;
     }
 
@@ -720,7 +720,7 @@ void OnUpdateFile(HWND hwnd)
 
     if (DoUpdateFile(hwnd, functions))
     {
-        MessageBoxW(hwnd, L"File payload/hookbody.hpp is successfully updated.",
+        MessageBoxW(hwnd, L"File payload/hookbody.h is successfully updated.",
                     L"CustomHook hookmaker", MB_ICONINFORMATION);
     }
 }
