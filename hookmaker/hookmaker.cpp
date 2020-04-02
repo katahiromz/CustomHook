@@ -422,7 +422,7 @@ BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, const std::string& name, const F
     if (fields[2].empty())
         fprintf(fp, "    va_start(va, arg%d);\n", int(fn.params.size() - 1));
     else
-        fprintf(fp, "    va_start(va, %s);\n", fields[2]);
+        fprintf(fp, "    va_start(va, %s);\n", fields[2].c_str());
     fprintf(fp, "    DoEnableHook(FALSE);\n");
 
     fprintf(fp, "    TRACE(\"%s(", name.c_str());
