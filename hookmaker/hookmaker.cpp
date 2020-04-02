@@ -685,6 +685,11 @@ void OnAdd(HWND hwnd)
             SendDlgItemMessageA(hwnd, lst2, LB_ADDSTRING, 0, (LPARAM)szBuff);
         }
     }
+
+    for (INT i = nCount - 1; i >= 0; --i)
+    {
+        SendDlgItemMessageA(hwnd, lst1, LB_DELETESTRING, selection[i], 0);
+    }
 }
 
 void OnEdt1(HWND hwnd)
@@ -752,6 +757,59 @@ void OnClearAll(HWND hwnd)
 
 BOOL DoLoadFile(HWND hwnd, LPCWSTR pszFile)
 {
+    using namespace cr2;
+
+    SendDlgItemMessageA(hwnd, lst1, LB_RESETCONTENT, 0, 0);
+
+    PEModule module(pszFile);
+    if (!module.is_loaded())
+    {
+        return FALSE;
+    }
+
+    ImportTable imports;
+    module.load_import_table(imports);
+    for (auto& entry : imports)
+    {
+        auto& name = entry.func_name;
+        if (name.empty())
+            continue;
+
+        auto it = s_functions.find(name);
+        if (it == s_functions.end())
+            continue;
+
+        if ((INT)SendDlgItemMessageA(hwnd, lst1, LB_FINDSTRINGEXACT, -1, (LPARAM)name.c_str()) == LB_ERR)
+        {
+            SendDlgItemMessageA(hwnd, lst1, LB_ADDSTRING, 0, (LPARAM)name.c_str());
+        }
+    }
+
+    DelayTable delay;
+    module.load_delay_table(delay);
+    for (auto& entry : delay)
+    {
+        auto& name = entry.func_name;
+
+        if (name.empty())
+            continue;
+
+        auto it = s_functions.find(name);
+        if (it == s_functions.end())
+            continue;
+
+        if ((INT)SendDlgItemMessageA(hwnd, lst1, LB_FINDSTRINGEXACT, -1, (LPARAM)name.c_str()) == LB_ERR)
+        {
+            SendDlgItemMessageA(hwnd, lst1, LB_ADDSTRING, 0, (LPARAM)name.c_str());
+        }
+    }
+
+    INT i, nCount = SendDlgItemMessageA(hwnd, lst1, LB_GETCOUNT, 0, 0);
+    for (i = 0; i < nCount; ++i)
+    {
+        SendDlgItemMessageA(hwnd, lst1, LB_SETSEL, TRUE, i);
+    }
+
     return TRUE;
 }
 
