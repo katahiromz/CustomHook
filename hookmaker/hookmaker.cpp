@@ -139,6 +139,8 @@ void DoUpdateList(HWND hwnd, LPCSTR pszText)
 
 BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 {
+    DragAcceptFiles(hwnd, TRUE);
+
     HICON hIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(1));
     HICON hIconSmall = (HICON)LoadImageW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(1),
         IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0);
@@ -791,7 +793,7 @@ BOOL ExecuteRosBEAndBuildPayload(HWND hwnd, LPCWSTR pszPath, LPCWSTR rosbe_cmd)
 
     // prepare process creation
     MProcessMaker pmaker;
-    pmaker.SetShowWindow(SW_HIDE);
+    //pmaker.SetShowWindow(SW_HIDE);
     pmaker.SetCurrentDirectory(pszPath);
     pmaker.SetCreationFlags(CREATE_NEW_CONSOLE);
 
@@ -813,6 +815,7 @@ BOOL ExecuteRosBEAndBuildPayload(HWND hwnd, LPCWSTR pszPath, LPCWSTR rosbe_cmd)
     input.WriteFormatA("if exist CMakeCache.txt del CMakeCache.txt\n");
     input.WriteFormatA("cmake -G \"Ninja\"\n");
     input.WriteFormatA("ninja\n");
+    input.WriteFormatA("exit\n");
     input.CloseHandle();
 
     // wait
@@ -1031,6 +1034,14 @@ void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     }
 }
 
+void OnDropFiles(HWND hwnd, HDROP hdrop)
+{
+    WCHAR szFile[MAX_PATH];
+    DragQueryFileW(hdrop, 0, szFile, ARRAYSIZE(szFile));
+    DoLoadFile(hwnd, szFile);
+    DragFinish(hdrop);
+}
+
 INT_PTR CALLBACK
 DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1038,6 +1049,7 @@ DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
         HANDLE_MSG(hwnd, WM_INITDIALOG, OnInitDialog);
         HANDLE_MSG(hwnd, WM_COMMAND, OnCommand);
+        HANDLE_MSG(hwnd, WM_DROPFILES, OnDropFiles);
     }
     return 0;
 }
