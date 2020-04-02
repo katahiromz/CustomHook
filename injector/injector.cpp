@@ -7,6 +7,21 @@
 #include <tchar.h>
 #include <cstdlib>
 #include <cassert>
+#include "resource.h"
+
+LPWSTR LoadStringDx(INT nID)
+{
+    static UINT s_index = 0;
+    const UINT cchBuffMax = 1024;
+    static WCHAR s_sz[4][cchBuffMax];
+
+    WCHAR *pszBuff = s_sz[s_index];
+    s_index = (s_index + 1) % _countof(s_sz);
+    pszBuff[0] = 0;
+    if (!::LoadStringW(NULL, nID, pszBuff, cchBuffMax))
+        assert(0);
+    return pszBuff;
+}
 
 BOOL IsWow64(HANDLE hProcess)
 {
@@ -72,13 +87,13 @@ BOOL DoInjectDLL(DWORD pid, LPCWSTR pszDllFile)
     AutoCloseHandle hProcess(OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid));
     if (!hProcess)
     {
-        MessageBoxW(NULL, L"!OpenProcess", NULL, MB_ICONERROR);
+        MessageBoxW(NULL, LoadStringDx(IDS_CANTOPENPROCESS), NULL, MB_ICONERROR);
         return FALSE;
     }
 
     if (!DoCheckBits(hProcess))
     {
-        MessageBoxW(NULL, L"!DoCheckBits(hProcess)", NULL, MB_ICONERROR);
+        MessageBoxW(NULL, LoadStringDx(IDS_BITSDIFFER), NULL, MB_ICONERROR);
         return FALSE;
     }
 
@@ -86,7 +101,7 @@ BOOL DoInjectDLL(DWORD pid, LPCWSTR pszDllFile)
     LPVOID pParam = VirtualAllocEx(hProcess, NULL, cbParam, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     if (!pParam)
     {
-        MessageBoxW(NULL, L"Out of memory!", NULL, MB_ICONERROR);
+        MessageBoxW(NULL, LoadStringDx(IDS_OUTOFMEMORY), NULL, MB_ICONERROR);
         return FALSE;
     }
 
@@ -96,7 +111,7 @@ BOOL DoInjectDLL(DWORD pid, LPCWSTR pszDllFile)
     FARPROC pLoadLibraryW = GetProcAddress(hKernel32, "LoadLibraryW");
     if (!pLoadLibraryW)
     {
-        MessageBoxW(NULL, L"!pLoadLibraryW", NULL, MB_ICONERROR);
+        MessageBoxW(NULL, LoadStringDx(IDS_CANTFINDLOADER), NULL, MB_ICONERROR);
         VirtualFreeEx(hProcess, pParam, cbParam, MEM_RELEASE);
         return FALSE;
     }
@@ -105,7 +120,7 @@ BOOL DoInjectDLL(DWORD pid, LPCWSTR pszDllFile)
         (LPTHREAD_START_ROUTINE)pLoadLibraryW, pParam, 0, NULL));
     if (!hThread)
     {
-        MessageBoxW(NULL, L"!CreateRemoteThread", NULL, MB_ICONERROR);
+        MessageBoxW(NULL, LoadStringDx(IDS_CANTMAKERTHREAD), NULL, MB_ICONERROR);
         VirtualFreeEx(hProcess, pParam, cbParam, MEM_RELEASE);
         return FALSE;
     }
@@ -168,13 +183,13 @@ BOOL DoUninjectDLL(DWORD pid, LPCWSTR pszDllFile)
     AutoCloseHandle hProcess(OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid));
     if (!hProcess)
     {
-        MessageBoxW(NULL, L"!OpenProcess", NULL, MB_ICONERROR);
+        MessageBoxW(NULL, LoadStringDx(IDS_CANTOPENPROCESS), NULL, MB_ICONERROR);
         return FALSE;
     }
 
     if (!DoCheckBits(hProcess))
     {
-        MessageBoxW(NULL, L"!DoCheckBits(hProcess)", NULL, MB_ICONERROR);
+        MessageBoxW(NULL, LoadStringDx(IDS_BITSDIFFER), NULL, MB_ICONERROR);
         return FALSE;
     }
 
@@ -190,7 +205,7 @@ BOOL DoUninjectDLL(DWORD pid, LPCWSTR pszDllFile)
     FARPROC pLdrUnloadDll = GetProcAddress(hNTDLL, "LdrUnloadDll");
     if (!pLdrUnloadDll)
     {
-        MessageBoxW(NULL, L"!pLdrUnloadDll", NULL, MB_ICONERROR);
+        MessageBoxW(NULL, LoadStringDx(IDS_CANTFINDUNLOADER), NULL, MB_ICONERROR);
         return FALSE;
     }
 
@@ -198,7 +213,7 @@ BOOL DoUninjectDLL(DWORD pid, LPCWSTR pszDllFile)
         (LPTHREAD_START_ROUTINE)pLdrUnloadDll, hModule, 0, NULL));
     if (!hThread)
     {
-        MessageBoxW(NULL, L"!CreateRemoteThread", NULL, MB_ICONERROR);
+        MessageBoxW(NULL, LoadStringDx(IDS_CANTMAKERTHREAD), NULL, MB_ICONERROR);
         return FALSE;
     }
 
@@ -213,7 +228,7 @@ void OnInject(HWND hwnd, BOOL bInject)
     DWORD pid = GetDlgItemInt(hwnd, edt1, &bTranslated, FALSE);
     if (!bTranslated)
     {
-        MessageBoxW(hwnd, L"Invalid PID", NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_INVALIDPID), NULL, MB_ICONERROR);
         return;
     }
 
@@ -286,7 +301,7 @@ void OnRunWithInjection(HWND hwnd)
 
     if (!ret)
     {
-        MessageBoxW(hwnd, L"Cannot startup process!", NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTSTARTPROCESS), NULL, MB_ICONERROR);
         return;
     }
 
@@ -334,7 +349,7 @@ void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 void OnDropFiles(HWND hwnd, HDROP hdrop)
 {
     WCHAR szPath[MAX_PATH];
-    DragQueryFile(hdrop, 0, szPath, MAX_PATH);
+    DragQueryFileW(hdrop, 0, szPath, MAX_PATH);
 
     SetDlgItemTextW(hwnd, edt2, szPath);
 
