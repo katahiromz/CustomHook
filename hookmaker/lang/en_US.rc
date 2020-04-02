@@ -28,3 +28,17 @@ FONT 9, "MS Shell Dlg"
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// RT_STRING
+
+STRINGTABLE
+{
+    IDS_CANTFINDWONDERS, "Cannot find WondersXP."
+    IDS_CANTLOADWONDERS, "Cannot load WondersXP."
+    IDS_CANTWRITEHOOKBODY, "Cannot write File ""payload/hookbody.h""."
+    IDS_INTERNALERROR, "Internal error."
+    IDS_ADDHOOKFUNCTIONS, "Please add function(s) to be hooked."
+    IDS_HOOKBODYUPDATED, "File ""payload/hookbody.h"" is successfully updated."
+    IDS_APPNAME, "CustomHook hookmaker"
+}
+
+//////////////////////////////////////////////////////////////////////////////

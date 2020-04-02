@@ -28,3 +28,17 @@ FONT 9, "MS UI Gothic"
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// RT_STRING
+
+STRINGTABLE
+{
+    IDS_CANTFINDWONDERS, "WondersXP が見つかりません。"
+    IDS_CANTLOADWONDERS, "WondersXP が読み込めません。"
+    IDS_CANTWRITEHOOKBODY, "ファイル「payload/hookbody.h」に書き込めません。"
+    IDS_INTERNALERROR, "内部エラーです。"
+    IDS_ADDHOOKFUNCTIONS, "フックする関数を追加して下さい。"
+    IDS_HOOKBODYUPDATED, "ファイル「payload/hookbody.h」は正しく更新されました。"
+    IDS_APPNAME, "CustomHook hookmaker"
+}
+
+//////////////////////////////////////////////////////////////////////////////

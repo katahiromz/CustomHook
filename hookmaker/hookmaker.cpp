@@ -7,8 +7,10 @@
 #include <string>
 #include <cstdio>
 #include <vector>
+#include <cassert>
 #include <map>
 #include "../CodeReverse2/PEModule.h"
+#include "resource.h"
 
 struct FUNCTION
 {
@@ -34,6 +36,20 @@ void split(t_string_container& container,
         j = str.find(sep, i);
     }
     container.emplace_back(std::move(str.substr(i, -1)));
+}
+
+LPWSTR LoadStringDx(INT nID)
+{
+    static UINT s_index = 0;
+    const UINT cchBuffMax = 1024;
+    static WCHAR s_sz[4][cchBuffMax];
+
+    WCHAR *pszBuff = s_sz[s_index];
+    s_index = (s_index + 1) % _countof(s_sz);
+    pszBuff[0] = 0;
+    if (!::LoadStringW(NULL, nID, pszBuff, cchBuffMax))
+        assert(0);
+    return pszBuff;
 }
 
 BOOL GetWondersDirectory(LPWSTR pszPath, INT cchPath)
@@ -131,7 +147,7 @@ BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
     WCHAR szPath[MAX_PATH];
     if (!GetWondersDirectory(szPath, ARRAYSIZE(szPath)))
     {
-        MessageBoxW(hwnd, L"Cannot find WondersXP.", NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTFINDWONDERS), NULL, MB_ICONERROR);
         EndDialog(hwnd, IDABORT);
         return FALSE;
     }
@@ -143,7 +159,7 @@ BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
     if (!DoLoadFunctions(szPath, L"-cl-32-w.dat"))
 #endif
     {
-        MessageBoxW(hwnd, L"Cannot load WondersXP.", NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTLOADWONDERS), NULL, MB_ICONERROR);
         EndDialog(hwnd, IDABORT);
         return FALSE;
     }
@@ -634,7 +650,7 @@ BOOL DoUpdateFile(HWND hwnd, std::vector<std::string>& names)
     WCHAR szPath[MAX_PATH];
     if (!GetWondersDirectory(szPath, ARRAYSIZE(szPath)))
     {
-        MessageBoxW(hwnd, L"Cannot find WondersXP.", NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTFINDWONDERS), NULL, MB_ICONERROR);
         return FALSE;
     }
     PathAppendW(szPath, L"..\\payload\\hookbody.h");
@@ -642,7 +658,7 @@ BOOL DoUpdateFile(HWND hwnd, std::vector<std::string>& names)
     FILE *fp = _wfopen(szPath, L"w");
     if (!fp)
     {
-        MessageBoxW(hwnd, L"Cannot write file payload\\hookbody.h.", NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTWRITEHOOKBODY), NULL, MB_ICONERROR);
         return FALSE;
     }
 
@@ -671,7 +687,7 @@ void OnAdd(HWND hwnd)
     INT ret = (INT)SendDlgItemMessageA(hwnd, lst1, LB_GETSELITEMS, nCount, (LPARAM)&selection[0]);
     if (ret == LB_ERR)
     {
-        MessageBoxW(hwnd, L"Internal error.", NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_INTERNALERROR), NULL, MB_ICONERROR);
         return;
     }
 
@@ -706,7 +722,7 @@ void OnUpdateFile(HWND hwnd)
     INT nCount = (INT)SendDlgItemMessageA(hwnd, lst2, LB_GETCOUNT, 0, 0);
     if (nCount <= 0)
     {
-        MessageBoxW(hwnd, L"Please add function(s) to be hooked.", NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_ADDHOOKFUNCTIONS), NULL, MB_ICONERROR);
         return;
     }
 
@@ -720,8 +736,8 @@ void OnUpdateFile(HWND hwnd)
 
     if (DoUpdateFile(hwnd, functions))
     {
-        MessageBoxW(hwnd, L"File payload/hookbody.h is successfully updated.",
-                    L"CustomHook hookmaker", MB_ICONINFORMATION);
+        MessageBoxW(hwnd, LoadStringDx(IDS_HOOKBODYUPDATED),
+                    LoadStringDx(IDS_APPNAME), MB_ICONINFORMATION);
     }
 }
 
@@ -738,7 +754,7 @@ void OnDelete(HWND hwnd)
     INT ret = (INT)SendDlgItemMessageA(hwnd, lst2, LB_GETSELITEMS, nCount, (LPARAM)&selection[0]);
     if (ret == LB_ERR)
     {
-        MessageBoxW(hwnd, L"Internal error.", NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_INTERNALERROR), NULL, MB_ICONERROR);
         return;
     }
 
