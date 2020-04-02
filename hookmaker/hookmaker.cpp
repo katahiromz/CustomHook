@@ -720,10 +720,17 @@ void OnEdt1(HWND hwnd)
 
 LPCWSTR FindRosBECmd(void)
 {
-    LPCWSTR paths[] = {
+    LPCWSTR paths[] =
+    {
         L"C:\\RosBE\\RosBE.cmd",
         L"C:\\Program Files\\RosBE\\RosBE.cmd",
-        L"C:\\Program Files (x86)\\RosBE\\RosBE.cmd"
+        L"C:\\Program Files (x86)\\RosBE\\RosBE.cmd",
+        L"D:\\RosBE\\RosBE.cmd",
+        L"D:\\Program Files\\RosBE\\RosBE.cmd",
+        L"D:\\Program Files (x86)\\RosBE\\RosBE.cmd",
+        L"E:\\RosBE\\RosBE.cmd",
+        L"E:\\Program Files\\RosBE\\RosBE.cmd",
+        L"E:\\Program Files (x86)\\RosBE\\RosBE.cmd",
     };
 
     LPCWSTR ret = NULL;
