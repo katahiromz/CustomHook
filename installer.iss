@@ -97,8 +97,5 @@ Name: "{group}\README.txt"; Filename: "{app}\README.txt"
 Name: "{group}\hookmaker"; Filename: "{app}\hookmaker.exe"
 Name: "{group}\injector"; Filename: "{app}\injector.exe"
 Name: "{group}\target"; Filename: "{app}\target.exe"
-Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
-
-[Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
-
+Name: "{commondesktop}\CustomHook Injector"; Filename: "{app}\injector.exe"; Tasks: desktopicon
+Name: "{commondesktop}\CustomHook HookMaker"; Filename: "{app}\hookmaker.exe"; Tasks: desktopicon
