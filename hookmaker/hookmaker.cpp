@@ -745,15 +745,6 @@ BOOL DoRebuildPayload(HWND hwnd)
     WCHAR szText[2 * MAX_PATH];
     StringCbPrintfW(szText, sizeof(szText), L"cmd.exe /k \"%s\"", rosbe_cmd);
 
-    MProcessMaker pmaker;
-
-    MFile input, output;
-    if (!pmaker.PrepareForRedirect(&input, &output, &output))
-    {
-        MessageBoxW(hwnd, LoadStringDx(IDS_CANTOPENROSBE), NULL, MB_ICONERROR);
-        return FALSE;
-    }
-
     WCHAR szPath[MAX_PATH];
     GetModuleFileNameW(NULL, szPath, ARRAYSIZE(szPath));
     PathRemoveFileSpecW(szPath);
@@ -761,10 +752,14 @@ BOOL DoRebuildPayload(HWND hwnd)
     PathAppendW(szPath, L"payload");
     //MessageBoxW(NULL, szPath, NULL, 0);
 
+    MProcessMaker pmaker;
     pmaker.SetShowWindow(SW_HIDE);
     pmaker.SetCurrentDirectory(szPath);
     pmaker.SetCreationFlags(CREATE_NEW_CONSOLE);
-    if (!pmaker.CreateProcessDx(NULL, szText))
+
+    MFile input, output;
+    if (!pmaker.PrepareForRedirect(&input, &output, &output) ||
+        !pmaker.CreateProcessDx(NULL, szText))
     {
         MessageBoxW(hwnd, LoadStringDx(IDS_CANTOPENROSBE), NULL, MB_ICONERROR);
         return FALSE;
@@ -784,22 +779,18 @@ BOOL DoRebuildPayload(HWND hwnd)
     //MessageBoxA(NULL, strOutput.c_str(), NULL, 0);
 
 #ifdef _WIN64
-    PathAppendW(szPath, L"payload64.dll");
+    #define PAYLOAD_DLL L"payload64.dll"
 #else
-    PathAppendW(szPath, L"payload32.dll");
+    #define PAYLOAD_DLL L"payload32.dll"
 #endif
+    PathAppendW(szPath, PAYLOAD_DLL);
 
     WCHAR szFile[MAX_PATH];
     GetModuleFileNameW(NULL, szFile, ARRAYSIZE(szFile));
     PathRemoveFileSpecW(szFile);
-#ifdef _WIN64
-    PathAppendW(szFile, L"payload64.dll");
-#else
-    PathAppendW(szFile, L"payload32.dll");
-#endif
+    PathAppendW(szFile, PAYLOAD_DLL);
 
-    if (lstrcmpiW(szPath, szFile) == 0 ||
-        CopyFileW(szPath, szFile, FALSE))
+    if (lstrcmpiW(szPath, szFile) == 0 || CopyFileW(szPath, szFile, FALSE))
     {
         MessageBoxW(NULL, LoadStringDx(IDS_PAYLOADUPDATED),
                     LoadStringDx(IDS_APPNAME), MB_ICONINFORMATION);
