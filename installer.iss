@@ -24,7 +24,7 @@ DefaultGroupName=CustomHook
 DisableProgramGroupPage=yes
 LicenseFile=LICENSE.txt
 OutputDir=.
-OutputBaseFilename=customhook-{#MyAppVersion}-setup
+OutputBaseFilename=CustomHook-{#MyAppVersion}-setup
 Compression=lzma
 SolidCompression=yes
 
