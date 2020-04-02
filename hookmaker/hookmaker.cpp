@@ -774,6 +774,8 @@ BOOL ExecuteRosBEAndBuildPayload(HWND hwnd, LPCWSTR pszPath, LPCWSTR rosbe_cmd)
     #define PAYLOAD_DLL L"payload32.dll"
 #endif
 
+    SetDlgItemTextW(hwnd, psh3, LoadStringDx(IDS_PLEASEWAIT));
+
     // src pathname
     WCHAR szSrcFile[MAX_PATH];
     StringCbCopyW(szSrcFile, sizeof(szSrcFile), pszPath);
@@ -795,6 +797,7 @@ BOOL ExecuteRosBEAndBuildPayload(HWND hwnd, LPCWSTR pszPath, LPCWSTR rosbe_cmd)
         !pmaker.CreateProcessDx(NULL, szText))
     {
         MessageBoxW(hwnd, LoadStringDx(IDS_CANTOPENROSBE), NULL, MB_ICONERROR);
+        SetDlgItemTextW(hwnd, psh3, LoadStringDx(IDS_BUTTONTEXT));
         return FALSE;
     }
 
@@ -818,6 +821,8 @@ BOOL ExecuteRosBEAndBuildPayload(HWND hwnd, LPCWSTR pszPath, LPCWSTR rosbe_cmd)
     GetModuleFileNameW(NULL, szDestFile, ARRAYSIZE(szDestFile));
     PathRemoveFileSpecW(szDestFile);
     PathAppendW(szDestFile, PAYLOAD_DLL);
+
+    SetDlgItemTextW(hwnd, psh3, LoadStringDx(IDS_BUTTONTEXT));
 
     // copy a file
     if (!CopyFileW(szSrcFile, szDestFile, FALSE))

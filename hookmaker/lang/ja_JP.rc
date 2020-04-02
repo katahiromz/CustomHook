@@ -44,6 +44,8 @@ STRINGTABLE
     IDS_PAYLOADUPDATED, "payload を再構築しました。"
     IDS_PAYLOADBUILDFAIL, "payload の再構築に失敗しました。"
     IDS_CANTFINDPAYLOAD, "payload が見つかりません。"
+    IDS_PLEASEWAIT, "お待ちください..."
+    IDS_BUTTONTEXT, "ファイル「payload/hookbody.h」を更新(&U)"
 }
 
 //////////////////////////////////////////////////////////////////////////////

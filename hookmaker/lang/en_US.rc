@@ -44,6 +44,8 @@ STRINGTABLE
     IDS_PAYLOADUPDATED, "Build of payload is successfully done."
     IDS_PAYLOADBUILDFAIL, "Failed to rebuild payload."
     IDS_CANTFINDPAYLOAD, "Cannot find payload."
+    IDS_PLEASEWAIT, "Please wait..."
+    IDS_BUTTONTEXT, "&Update File ""payload/hookbody.h"""
 }
 
 //////////////////////////////////////////////////////////////////////////////
