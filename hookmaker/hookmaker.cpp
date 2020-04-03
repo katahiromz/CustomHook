@@ -32,6 +32,8 @@ std::set<std::string> s_excludes =
     "fopen",
     "vfprintf",
     "fclose",
+    "wsprintfA",
+    "wsprintfW",
 };
 
 template <typename t_string_container, 
@@ -272,13 +274,14 @@ BOOL DoWriteFunctionVariables(FILE *fp, const std::vector<std::string>& names)
 {
     for (auto& name : names)
     {
-        fprintf(fp, "static FN_%s fn_%s = NULL;\n", name.c_str(), name.c_str());
+        fprintf(fp, "static FN_%s fn_%s = &%s;\n",
+                name.c_str(), name.c_str(), name.c_str());
     }
     fprintf(fp, "\n");
     return TRUE;
 }
 
-BOOL DoWriteSpecifier(FILE *fp, std::vector<std::string>& fields)
+BOOL DoWriteSpecifier(FILE *fp, const std::string& name, std::vector<std::string>& fields)
 {
     switch (fields[0][0])
     {
@@ -307,24 +310,55 @@ BOOL DoWriteSpecifier(FILE *fp, std::vector<std::string>& fields)
         break;
     case 'p': case 'h':
         if (fields[1] == "LPCSTR" ||
-            fields[1] == "const char*" ||
-            fields[1] == "const CHAR*")
+            fields[1] == "const CHAR*" ||
+            fields[1] == "const char*")
         {
             fprintf(fp, "'%%s'");
-            return TRUE;
         }
-        if (fields[1] == "LPCWSTR" ||
-            fields[1] == "const wchar_t*" ||
-            fields[1] == "const WCHAR*")
+        else if (fields[1] == "LPCWSTR" ||
+                 fields[1] == "const WCHAR*" ||
+                 fields[1] == "const wchar_t*")
         {
             fprintf(fp, "'%%ls'");
-            return TRUE;
         }
-        fprintf(fp, "%%p");
+        else
+        {
+            fprintf(fp, "%%p");
+        }
         break;
     default:
         fprintf(fp, "?");
         break;
+    }
+    return TRUE;
+}
+
+BOOL DoWriteParameter(FILE *fp, const std::string& name, int iarg, std::vector<std::string>& fields)
+{
+    if (fields[1] == "LPCSTR" ||
+        fields[1] == "const CHAR*" ||
+        fields[1] == "const char*")
+    {
+        if (fields[2].empty())
+            fprintf(fp, "do_LPCSTR(arg%d)", iarg);
+        else
+            fprintf(fp, "do_LPCSTR(%s)", fields[2].c_str());
+    }
+    else if (fields[1] == "LPCWSTR" ||
+             fields[1] == "const WCHAR*" ||
+             fields[1] == "const wchar_t*")
+    {
+        if (fields[2].empty())
+            fprintf(fp, "do_LPCWSTR(arg%d)", iarg);
+        else
+            fprintf(fp, "do_LPCWSTR(%s)", fields[2].c_str());
+    }
+    else
+    {
+        if (fields[2].empty())
+            fprintf(fp, "arg%d", iarg);
+        else
+            fprintf(fp, "%s", fields[2].c_str());
     }
     return TRUE;
 }
@@ -356,7 +390,7 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, const std::string& name, const FUNCTION
             fprintf(fp, "arg%d=", iarg);
         else
             fprintf(fp, "%s=", fields[2].c_str());
-        DoWriteSpecifier(fp, fields);
+        DoWriteSpecifier(fp, name, fields);
         first = false;
         ++iarg;
     }
@@ -377,10 +411,7 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, const std::string& name, const FUNCTION
             break;
         }
         split(fields, param, ':');
-        if (fields[2].empty())
-            fprintf(fp, "arg%d", iarg);
-        else
-            fprintf(fp, "%s", fields[2].c_str());
+        DoWriteParameter(fp, name, iarg, fields);
         first = false;
         ++iarg;
     }
@@ -420,7 +451,7 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, const std::string& name, const FUNCTION
     {
         fprintf(fp, "    TRACE(\"%s returned ", name.c_str());
         split(fields, fn.ret, ':');
-        DoWriteSpecifier(fp, fields);
+        DoWriteSpecifier(fp, name, fields);
         fprintf(fp, "\\n\", ret);\n");
     }
 
@@ -517,7 +548,7 @@ BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, const std::string& name, const F
             fprintf(fp, "arg%d=", iarg);
         else
             fprintf(fp, "%s=", fields[2].c_str());
-        DoWriteSpecifier(fp, fields);
+        DoWriteSpecifier(fp, name, fields);
         first = false;
         ++iarg;
     }
@@ -579,7 +610,7 @@ BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, const std::string& name, const F
     {
         fprintf(fp, "    TRACE(\"%s returned ", name.c_str());
         split(fields, fn.ret, ':');
-        DoWriteSpecifier(fp, fields);
+        DoWriteSpecifier(fp, name, fields);
         fprintf(fp, "\\n\", ret);\n");
     }
 

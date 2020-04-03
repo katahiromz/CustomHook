@@ -2,7 +2,7 @@
 
 typedef int (__stdcall *FN_MessageBoxW)(HWND, LPCWSTR, LPCWSTR, UINT);
 
-static FN_MessageBoxW fn_MessageBoxW = NULL;
+static FN_MessageBoxW fn_MessageBoxW = &MessageBoxW;
 
 int __stdcall
 DetourMessageBoxW(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT uType)
@@ -10,7 +10,7 @@ DetourMessageBoxW(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT uType)
     DWORD dwLastError;
     int ret;
     TRACE("MessageBoxW(hWnd=%p, lpText='%ls', lpCaption='%ls', uType=%u)\n",
-          hWnd, lpText, lpCaption, uType);
+          hWnd, do_LPCWSTR(lpText), do_LPCWSTR(lpCaption), uType);
     ret = fn_MessageBoxW(hWnd, lpText, lpCaption, uType);
     dwLastError = GetLastError();
     TRACE("MessageBoxW returned %d\n", ret);

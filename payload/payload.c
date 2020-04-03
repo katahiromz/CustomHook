@@ -16,6 +16,32 @@ static FN_VirtualProtect s_fnVirtualProtect = NULL;
 typedef BOOL (WINAPI *FN_WriteProcessMemory)(HANDLE, LPVOID, LPCVOID, SIZE_T, SIZE_T *);
 static FN_WriteProcessMemory s_fnWriteProcessMemory = NULL;
 
+LPCSTR do_LPCSTR(LPCSTR str)
+{
+    if (str == NULL)
+        return "(null)";
+    if (HIWORD(str) == 0)
+    {
+        static CHAR s_szText[1024];
+        wsprintfA(s_szText, "#%u", LOWORD(str));
+        return s_szText;
+    }
+    return str;
+}
+
+LPCWSTR do_LPCWSTR(LPCWSTR str)
+{
+    if (str == NULL)
+        return L"(null)";
+    if (HIWORD(str) == 0)
+    {
+        static WCHAR s_szText[1024];
+        wsprintfW(s_szText, L"#%u", LOWORD(str));
+        return s_szText;
+    }
+    return str;
+}
+
 LPVOID
 CH_DoHookEx(HMODULE hModule, const char *module_name, const char *func_name, LPVOID fn)
 {
