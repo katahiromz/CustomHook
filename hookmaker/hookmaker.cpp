@@ -288,21 +288,21 @@ BOOL DoWriteSpecifier(FILE *fp, const std::string& name, std::vector<std::string
     case 'i':
         if (fields[0] == "i64")
         {
-            fprintf(fp, "%%I64d");
+            fprintf(fp, "%%I64d (0x%%I64X)");
         }
         else
         {
-            fprintf(fp, "%%d");
+            fprintf(fp, "%%d (0x%%X)");
         }
         break;
     case 'u':
         if (fields[0] == "u64")
         {
-            fprintf(fp, "%%I64u");
+            fprintf(fp, "%%I64u (0x%%I64X)");
         }
         else
         {
-            fprintf(fp, "%%u");
+            fprintf(fp, "%%u (0x%%X)");
         }
         break;
     case 'f':
@@ -335,30 +335,48 @@ BOOL DoWriteSpecifier(FILE *fp, const std::string& name, std::vector<std::string
 
 BOOL DoWriteParameter(FILE *fp, const std::string& name, int iarg, std::vector<std::string>& fields)
 {
-    if (fields[1] == "LPCSTR" ||
-        fields[1] == "const CHAR*" ||
-        fields[1] == "const char*")
+    switch (fields[0][0])
     {
+    case 'i':
+    case 'u':
         if (fields[2].empty())
-            fprintf(fp, "do_LPCSTR(arg%d)", iarg);
+            fprintf(fp, "arg%d, arg%d", iarg, iarg);
         else
-            fprintf(fp, "do_LPCSTR(%s)", fields[2].c_str());
-    }
-    else if (fields[1] == "LPCWSTR" ||
-             fields[1] == "const WCHAR*" ||
-             fields[1] == "const wchar_t*")
-    {
-        if (fields[2].empty())
-            fprintf(fp, "do_LPCWSTR(arg%d)", iarg);
-        else
-            fprintf(fp, "do_LPCWSTR(%s)", fields[2].c_str());
-    }
-    else
-    {
+            fprintf(fp, "%s, %s", fields[2].c_str(), fields[2].c_str());
+        break;
+    case 'f':
         if (fields[2].empty())
             fprintf(fp, "arg%d", iarg);
         else
             fprintf(fp, "%s", fields[2].c_str());
+        break;
+    case 'p': case 'h':
+        if (fields[1] == "LPCSTR" ||
+            fields[1] == "const CHAR*" ||
+            fields[1] == "const char*")
+        {
+            if (fields[2].empty())
+                fprintf(fp, "do_LPCSTR(arg%d)", iarg);
+            else
+                fprintf(fp, "do_LPCSTR(%s)", fields[2].c_str());
+        }
+        else if (fields[1] == "LPCWSTR" ||
+                 fields[1] == "const WCHAR*" ||
+                 fields[1] == "const wchar_t*")
+        {
+            if (fields[2].empty())
+                fprintf(fp, "do_LPCWSTR(arg%d)", iarg);
+            else
+                fprintf(fp, "do_LPCWSTR(%s)", fields[2].c_str());
+        }
+        else
+        {
+            fprintf(fp, "%s", fields[2].c_str());
+        }
+        break;
+    default:
+        fprintf(fp, "?");
+        break;
     }
     return TRUE;
 }
