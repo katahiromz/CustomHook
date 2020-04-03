@@ -4,6 +4,7 @@
 
 BOOL DoHook(BOOL bHook);
 
+static DWORD s_dwCurrentProcessId = 0;
 static HANDLE s_hCurrentProcess = NULL;
 
 typedef PVOID (WINAPI *FN_ImageDirectoryEntryToData)(PVOID, BOOLEAN, USHORT, PULONG);
@@ -120,13 +121,14 @@ CH_DoHook(const char *module_name, const char *func_name, LPVOID fn)
     LPVOID ret;
 
     hModule = GetModuleHandleA(module_name);
-
     ret = CH_DoHookEx(hModule, module_name, func_name, fn);
-    if (!ret)
-    {
-        hModule = GetModuleHandleA(NULL);
-        ret = CH_DoHookEx(hModule, module_name, func_name, fn);
-    }
+    if (ret)
+        return ret;
+
+    hModule = GetModuleHandleA(NULL);
+    ret = CH_DoHookEx(hModule, module_name, func_name, fn);
+    if (ret)
+        return ret;
 
     return ret;
 }
@@ -135,6 +137,7 @@ BOOL CH_Init(BOOL bInit)
 {
     if (bInit)
     {
+        s_dwCurrentProcessId = GetCurrentProcessId();
         s_hCurrentProcess = GetCurrentProcess();
         s_fnImageDirectoryEntryToData = CH_DoHook("imagehlp.dll", "ImageDirectoryEntryToData", NULL);
         s_fnVirtualProtect = CH_DoHook("kernel32.dll", "VirtualProtect", NULL);
@@ -152,7 +155,8 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
     switch (fdwReason)
     {
     case DLL_PROCESS_ATTACH:
-        CH_Init(TRUE);
+        if (!CH_Init(TRUE))
+            return FALSE;
         if (!DoHook(TRUE))
             return FALSE;
         break;
