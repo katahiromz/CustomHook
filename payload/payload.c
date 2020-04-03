@@ -16,15 +16,31 @@ static FN_VirtualProtect s_fnVirtualProtect = NULL;
 typedef BOOL (WINAPI *FN_WriteProcessMemory)(HANDLE, LPVOID, LPCVOID, SIZE_T, SIZE_T *);
 static FN_WriteProcessMemory s_fnWriteProcessMemory = NULL;
 
+typedef int (WINAPIV *FN_wsprintfA)(LPSTR, LPCSTR, ...);
+static FN_wsprintfA s_fnwsprintfA = NULL;
+
+typedef int (WINAPIV *FN_wsprintfW)(LPWSTR, LPCWSTR, ...);
+static FN_wsprintfW s_fnwsprintfW = NULL;
+
 LPCSTR do_LPCSTR(LPCSTR str)
 {
     static CHAR s_szText[1024];
     if (str == NULL)
         return "(null)";
-    if (HIWORD(str) == 0)
-        wsprintfA(s_szText, "#%u", LOWORD(str));
+    if (s_fnwsprintfA)
+    {
+        if (HIWORD(str) == 0)
+            s_fnwsprintfA(s_szText, "#%u", LOWORD(str));
+        else
+            s_fnwsprintfA(s_szText, "'%s'", str);
+    }
     else
-        wsprintfA(s_szText, "'%s'", str);
+    {
+        if (HIWORD(str) == 0)
+            wsprintfA(s_szText, "#%u", LOWORD(str));
+        else
+            wsprintfA(s_szText, "'%s'", str);
+    }
     return s_szText;
 }
 
@@ -33,10 +49,20 @@ LPCWSTR do_LPCWSTR(LPCWSTR str)
     static WCHAR s_szText[1024];
     if (str == NULL)
         return L"(null)";
-    if (HIWORD(str) == 0)
-        wsprintfW(s_szText, L"#%u", LOWORD(str));
+    if (s_fnwsprintfW)
+    {
+        if (HIWORD(str) == 0)
+            s_fnwsprintfW(s_szText, L"#%u", LOWORD(str));
+        else
+            s_fnwsprintfW(s_szText, L"'%ls'", str);
+    }
     else
-        wsprintfW(s_szText, L"'%ls'", str);
+    {
+        if (HIWORD(str) == 0)
+            wsprintfW(s_szText, L"#%u", LOWORD(str));
+        else
+            wsprintfW(s_szText, L"'%ls'", str);
+    }
     return s_szText;
 }
 
@@ -166,6 +192,8 @@ BOOL CH_Init(BOOL bInit)
         s_fnImageDirectoryEntryToData = CH_DoHook("imagehlp.dll", "ImageDirectoryEntryToData", NULL);
         s_fnVirtualProtect = CH_DoHook("kernel32.dll", "VirtualProtect", NULL);
         s_fnWriteProcessMemory = CH_DoHook("kernel32.dll", "WriteProcessMemory", NULL);
+        s_fnwsprintfA = CH_DoHook("user32.dll", "wsprintfA", NULL);
+        s_fnwsprintfW = CH_DoHook("user32.dll", "wsprintfW", NULL);
     }
     return TRUE;
 }

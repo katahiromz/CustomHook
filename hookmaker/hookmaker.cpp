@@ -32,8 +32,6 @@ std::set<std::string> s_exclude_names =
     "fopen",
     "vfprintf",
     "fclose",
-    "wsprintfA",
-    "wsprintfW",
 };
 
 std::set<std::string> s_exclude_dlls =
