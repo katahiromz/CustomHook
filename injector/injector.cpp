@@ -82,18 +82,18 @@ struct AutoCloseHandle
     }
 };
 
-BOOL DoInjectDLL(DWORD pid, LPCWSTR pszDllFile)
+BOOL DoInjectDLL(HWND hwnd, DWORD pid, LPCWSTR pszDllFile)
 {
     AutoCloseHandle hProcess(OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid));
     if (!hProcess)
     {
-        MessageBoxW(NULL, LoadStringDx(IDS_CANTOPENPROCESS), NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTOPENPROCESS), NULL, MB_ICONERROR);
         return FALSE;
     }
 
     if (!DoCheckBits(hProcess))
     {
-        MessageBoxW(NULL, LoadStringDx(IDS_BITSDIFFER), NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_BITSDIFFER), NULL, MB_ICONERROR);
         return FALSE;
     }
 
@@ -101,7 +101,7 @@ BOOL DoInjectDLL(DWORD pid, LPCWSTR pszDllFile)
     LPVOID pParam = VirtualAllocEx(hProcess, NULL, cbParam, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     if (!pParam)
     {
-        MessageBoxW(NULL, LoadStringDx(IDS_OUTOFMEMORY), NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_OUTOFMEMORY), NULL, MB_ICONERROR);
         return FALSE;
     }
 
@@ -111,7 +111,7 @@ BOOL DoInjectDLL(DWORD pid, LPCWSTR pszDllFile)
     FARPROC pLoadLibraryW = GetProcAddress(hKernel32, "LoadLibraryW");
     if (!pLoadLibraryW)
     {
-        MessageBoxW(NULL, LoadStringDx(IDS_CANTFINDLOADER), NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTFINDLOADER), NULL, MB_ICONERROR);
         VirtualFreeEx(hProcess, pParam, cbParam, MEM_RELEASE);
         return FALSE;
     }
@@ -120,14 +120,23 @@ BOOL DoInjectDLL(DWORD pid, LPCWSTR pszDllFile)
         (LPTHREAD_START_ROUTINE)pLoadLibraryW, pParam, 0, NULL));
     if (!hThread)
     {
-        MessageBoxW(NULL, LoadStringDx(IDS_CANTMAKERTHREAD), NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTMAKERTHREAD), NULL, MB_ICONERROR);
         VirtualFreeEx(hProcess, pParam, cbParam, MEM_RELEASE);
         return FALSE;
     }
 
     WaitForSingleObject(hThread, INFINITE);
 
+    DWORD dwCode = 0;
+    GetExitCodeThread(hThread, &dwCode);
+
     VirtualFreeEx(hProcess, pParam, cbParam, MEM_RELEASE);
+    if (dwCode == 0)
+    {
+        MessageBoxW(hwnd, L"DoInjectDLL failed.", NULL, MB_ICONERROR);
+        return FALSE;
+    }
+
     return TRUE;
 }
 
@@ -178,18 +187,18 @@ BOOL DoGetProcessModuleInfo(LPMODULEENTRY32W pme, DWORD pid, LPCWSTR pszModule)
     return FALSE;
 }
 
-BOOL DoUninjectDLL(DWORD pid, LPCWSTR pszDllFile)
+BOOL DoUninjectDLL(HWND hwnd, DWORD pid, LPCWSTR pszDllFile)
 {
     AutoCloseHandle hProcess(OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid));
     if (!hProcess)
     {
-        MessageBoxW(NULL, LoadStringDx(IDS_CANTOPENPROCESS), NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTOPENPROCESS), NULL, MB_ICONERROR);
         return FALSE;
     }
 
     if (!DoCheckBits(hProcess))
     {
-        MessageBoxW(NULL, LoadStringDx(IDS_BITSDIFFER), NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_BITSDIFFER), NULL, MB_ICONERROR);
         return FALSE;
     }
 
@@ -205,7 +214,7 @@ BOOL DoUninjectDLL(DWORD pid, LPCWSTR pszDllFile)
     FARPROC pLdrUnloadDll = GetProcAddress(hNTDLL, "LdrUnloadDll");
     if (!pLdrUnloadDll)
     {
-        MessageBoxW(NULL, LoadStringDx(IDS_CANTFINDUNLOADER), NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTFINDUNLOADER), NULL, MB_ICONERROR);
         return FALSE;
     }
 
@@ -213,7 +222,7 @@ BOOL DoUninjectDLL(DWORD pid, LPCWSTR pszDllFile)
         (LPTHREAD_START_ROUTINE)pLdrUnloadDll, hModule, 0, NULL));
     if (!hThread)
     {
-        MessageBoxW(NULL, LoadStringDx(IDS_CANTMAKERTHREAD), NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTMAKERTHREAD), NULL, MB_ICONERROR);
         return FALSE;
     }
 
@@ -244,11 +253,11 @@ void OnInject(HWND hwnd, BOOL bInject)
 
     if (bInject)
     {
-        DoInjectDLL(pid, szDllFile);
+        DoInjectDLL(hwnd, pid, szDllFile);
     }
     else
     {
-        DoUninjectDLL(pid, szDllFile);
+        DoUninjectDLL(hwnd, pid, szDllFile);
     }
 }
 
@@ -317,7 +326,8 @@ void OnRunWithInjection(HWND hwnd)
 #endif
     //MessageBoxW(NULL, szDllFile, NULL, 0);
 
-    DoInjectDLL(pi.dwProcessId, szDllFile);
+    DoInjectDLL(hwnd, pi.dwProcessId, szDllFile);
+
     ResumeThread(pi.hThread);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
