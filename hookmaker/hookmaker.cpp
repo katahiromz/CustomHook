@@ -32,11 +32,6 @@ std::set<std::string> s_exclude_names =
     "SetLastError",
 };
 
-std::set<std::string> s_exclude_dlls =
-{
-    "msvcrt.dll"
-};
-
 template <typename t_string_container, 
           typename t_string = typename t_string_container::value_type>
 void split(t_string_container& container,
