@@ -137,7 +137,7 @@ mzcrt_inline int mzcrt_strcmp(const char *str1, const char *str2)
     return 0;
 }
 
-mzcrt_inline int mzcrt_stricmp(const char *str1, const char *str2)
+mzcrt_inline int mzcrt__stricmp(const char *str1, const char *str2)
 {
     const char *a = str1, *b = str2;
     char p, q;
@@ -169,7 +169,7 @@ mzcrt_inline int mzcrt_strncmp(const char *str1, const char *str2, size_t n)
 #undef strchr
 #undef strcmp
 #undef strcpy
-#undef stricmp
+#undef _stricmp
 #undef strlen
 #undef strlwr
 #undef strncmp
@@ -184,7 +184,7 @@ mzcrt_inline int mzcrt_strncmp(const char *str1, const char *str2, size_t n)
 #define strchr mzcrt_strchr
 #define strcmp mzcrt_strcmp
 #define strcpy mzcrt_strcpy
-#define stricmp mzcrt_stricmp
+#define _stricmp mzcrt__stricmp
 #define strlen mzcrt_strlen
 #define strlwr mzcrt_strlwr
 #define strncmp mzcrt_strncmp

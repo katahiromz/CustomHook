@@ -154,7 +154,7 @@ CH_DoHookEx(HMODULE hModule, const char *module_name, const char *func_name, LPV
     for (; pImports->Characteristics != 0; ++pImports)
     {
         mod_name = (LPSTR)((LPBYTE)hModule + pImports->Name);
-        if (stricmp(module_name, mod_name) != 0)
+        if (_stricmp(module_name, mod_name) != 0)
             continue;
 
         pIAT = (PIMAGE_THUNK_DATA)((LPBYTE)hModule + pImports->FirstThunk);
@@ -182,7 +182,7 @@ CH_DoHookEx(HMODULE hModule, const char *module_name, const char *func_name, LPV
             else
             {
                 pName = (PIMAGE_IMPORT_BY_NAME)((LPBYTE)hModule + pINT->u1.AddressOfData);
-                if (stricmp((LPSTR)pName->Name, func_name) != 0)
+                if (_stricmp((LPSTR)pName->Name, func_name) != 0)
                     continue;
             }
 

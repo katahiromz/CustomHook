@@ -136,7 +136,7 @@ mzcrt_inline int mzcrt_wcscmp(const wchar_t *str1, const wchar_t *str2)
     return 0;
 }
 
-mzcrt_inline int mzcrt_wcsicmp(const wchar_t *str1, const wchar_t *str2)
+mzcrt_inline int mzcrt__wcsicmp(const wchar_t *str1, const wchar_t *str2)
 {
     const wchar_t *a = p1, *b = p2;
     char p, q;
@@ -159,7 +159,7 @@ mzcrt_inline int mzcrt_wcsncmp(const wchar_t *str1, const wchar_t *str2, size_t 
 #undef wcschr
 #undef wcscmp
 #undef wcscpy
-#undef wcsicmp
+#undef _wcsicmp
 #undef wcslen
 #undef wcslwr
 #undef wcsncmp
@@ -174,7 +174,7 @@ mzcrt_inline int mzcrt_wcsncmp(const wchar_t *str1, const wchar_t *str2, size_t 
 #define wcschr mzcrt_wcschr
 #define wcscmp mzcrt_wcscmp
 #define wcscpy mzcrt_wcscpy
-#define wcsicmp mzcrt_wcsicmp
+#define _wcsicmp mzcrt__wcsicmp
 #define wcslen mzcrt_wcslen
 #define wcslwr mzcrt_wcslwr
 #define wcsncmp mzcrt_wcsncmp
