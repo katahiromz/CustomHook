@@ -14,6 +14,7 @@
 #define IDS_INVALIDPID                      106
 #define IDS_CANTFINDUNLOADER                107
 #define IDS_CANTFINDLOADER                  108
+#define IDS_INJECTIONFAIL                   109
 
 #ifdef APSTUDIO_INVOKED
     #ifndef APSTUDIO_READONLY_SYMBOLS

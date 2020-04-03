@@ -39,6 +39,7 @@ STRINGTABLE
     IDS_INVALIDPID, "Invalid PID."
     IDS_CANTFINDUNLOADER, "Cannot find NTDLL.LdrUnloadDll ."
     IDS_CANTFINDLOADER, "Cannot find kernel32.LoadLibraryW ."
+    IDS_INJECTIONFAIL, "Injection failed."
 }
 
 //////////////////////////////////////////////////////////////////////////////

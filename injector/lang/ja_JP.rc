@@ -39,6 +39,7 @@ STRINGTABLE
     IDS_INVALIDPID, "PIDが不正です。"
     IDS_CANTFINDUNLOADER, "NTDLL.LdrUnloadDll が見つかりません。"
     IDS_CANTFINDLOADER, "kernel32.LoadLibraryW が見つかりません。"
+    IDS_INJECTIONFAIL, "DLL注入に失敗しました。"
 }
 
 //////////////////////////////////////////////////////////////////////////////

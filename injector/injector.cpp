@@ -133,7 +133,7 @@ BOOL DoInjectDLL(HWND hwnd, DWORD pid, LPCWSTR pszDllFile)
     VirtualFreeEx(hProcess, pParam, cbParam, MEM_RELEASE);
     if (dwCode == 0)
     {
-        MessageBoxW(hwnd, L"DoInjectDLL failed.", NULL, MB_ICONERROR);
+        MessageBoxW(hwnd, LoadStringDx(IDS_INJECTIONFAIL), NULL, MB_ICONERROR);
         return FALSE;
     }
 
