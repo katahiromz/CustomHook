@@ -90,7 +90,7 @@ void CH_TraceV(const char *fmt, va_list va)
     static CHAR s_buf[1024];
     DWORD cbWritten;
 
-    hFile = ch_fn_CreateFileW(L"ch-trace.log",
+    hFile = ch_fn_CreateFileW(L"CustomHook.log",
                               GENERIC_READ | GENERIC_WRITE,
                               FILE_SHARE_READ,
                               NULL,
