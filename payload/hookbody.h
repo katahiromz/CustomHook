@@ -9,13 +9,11 @@ DetourMessageBoxW(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT uType)
 {
     DWORD dwLastError;
     int ret;
-    DoEnableHook(FALSE);
     TRACE("MessageBoxW(hWnd=%p, lpText='%ls', lpCaption='%ls', uType=%u)\n",
           hWnd, lpText, lpCaption, uType);
     ret = fn_MessageBoxW(hWnd, lpText, lpCaption, uType);
     dwLastError = GetLastError();
     TRACE("MessageBoxW returned %d\n", ret);
-    DoEnableHook(TRUE);
     SetLastError(dwLastError);
     return ret;
 }
@@ -24,28 +22,12 @@ BOOL DoHook(BOOL bHook)
 {
     if (bHook)
     {
-        if (MH_CreateHookCast(&MessageBoxW, &DetourMessageBoxW, &fn_MessageBoxW) != MH_OK)
-            return FALSE;
+        fn_MessageBoxW = CH_DoHook("user32.dll", "MessageBoxW", &DetourMessageBoxW);
+        if (!fn_MessageBoxW) return FALSE;
     }
     else
     {
-        if (MH_RemoveHookCast(&MessageBoxW) != MH_OK)
-            return FALSE;
-    }
-    return TRUE;
-}
-
-BOOL DoEnableHook(BOOL bEnable)
-{
-    if (bEnable)
-    {
-        if (MH_EnableHookCast(&MessageBoxW) != MH_OK)
-            return FALSE;
-    }
-    else
-    {
-        if (MH_DisableHookCast(&MessageBoxW) != MH_OK)
-            return FALSE;
+        CH_DoHook("MessageBoxW", "user32.dll", fn_MessageBoxW);
     }
     return TRUE;
 }

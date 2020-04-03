@@ -4,6 +4,3 @@
 [submodule "CodeReverse2"]
 	path = CodeReverse2
 	url = https://github.com/katahiromz/CodeReverse2.git
-[submodule "payload/minhook"]
-	path = payload/minhook
-	url = https://github.com/katahiromz/minhook.git

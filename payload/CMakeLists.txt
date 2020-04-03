@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.2)
 
-subdirs(minhook)
-
 add_library(payload SHARED payload.c)
 set_target_properties(payload PROPERTIES PREFIX "")
 
@@ -11,7 +9,7 @@ else()
     set_target_properties(payload PROPERTIES OUTPUT_NAME "payload32")
 endif()
 
-target_link_libraries(payload MinHook_static
+target_link_libraries(payload
     aclui
     advapi32
     cap

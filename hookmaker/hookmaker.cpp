@@ -301,8 +301,6 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, const std::string& name, const FUNCTION
     if (fields[0] != "v")
         fprintf(fp, "    %s ret;\n", fields[1].c_str());
 
-    fprintf(fp, "    DoEnableHook(FALSE);\n");
-
     fprintf(fp, "    TRACE(\"%s(", name.c_str());
     bool first = true;
     int iarg = 1;
@@ -389,7 +387,6 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, const std::string& name, const FUNCTION
         fprintf(fp, "\\n\", ret);\n");
     }
 
-    fprintf(fp, "    DoEnableHook(TRUE);\n");
     fprintf(fp, "    SetLastError(dwLastError);\n");
 
     if (fields[0] != "v")
@@ -464,7 +461,6 @@ BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, const std::string& name, const F
         fprintf(fp, "    va_start(va, arg%d);\n", int(fn.params.size() - 1));
     else
         fprintf(fp, "    va_start(va, %s);\n", fields[2].c_str());
-    fprintf(fp, "    DoEnableHook(FALSE);\n");
 
     fprintf(fp, "    TRACE(\"%s(", name.c_str());
     bool first = true;
@@ -550,7 +546,6 @@ BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, const std::string& name, const F
         fprintf(fp, "\\n\", ret);\n");
     }
 
-    fprintf(fp, "    DoEnableHook(TRUE);\n");
     fprintf(fp, "    SetLastError(dwLastError);\n");
     fprintf(fp, "    va_end(va);\n");
 
@@ -647,42 +642,17 @@ BOOL DoWriteDoHook(FILE *fp, const std::vector<std::string>& names)
     fprintf(fp, "    {\n");
     for (auto& name : names)
     {
-        fprintf(fp, "        if (MH_CreateHookCast(&%s, &Detour%s, &fn_%s) != MH_OK)\n",
-                name.c_str(), name.c_str(), name.c_str());
-        fprintf(fp, "            return FALSE;\n");
+        fprintf(fp, "        fn_%s = CH_DoHook(\"%s\", \"%s\", &Detour%s);\n",
+                name.c_str(), "user32.dll", name.c_str(), name.c_str());
+        fprintf(fp, "        if (!fn_%s) return FALSE;\n", name.c_str());
     }
     fprintf(fp, "    }\n");
     fprintf(fp, "    else\n");
     fprintf(fp, "    {\n");
     for (auto& name : names)
     {
-        fprintf(fp, "        if (MH_RemoveHookCast(&%s) != MH_OK)\n", name.c_str());
-        fprintf(fp, "            return FALSE;\n");
-    }
-    fprintf(fp, "    }\n");
-    fprintf(fp, "    return TRUE;\n");
-    fprintf(fp, "}\n\n");
-    return TRUE;
-}
-
-BOOL DoWriteDoEnableHook(FILE *fp, const std::vector<std::string>& names)
-{
-    fprintf(fp, "BOOL DoEnableHook(BOOL bEnable)\n");
-    fprintf(fp, "{\n");
-    fprintf(fp, "    if (bEnable)\n");
-    fprintf(fp, "    {\n");
-    for (auto& name : names)
-    {
-        fprintf(fp, "        if (MH_EnableHookCast(&%s) != MH_OK)\n", name.c_str());
-        fprintf(fp, "            return FALSE;\n");
-    }
-    fprintf(fp, "    }\n");
-    fprintf(fp, "    else\n");
-    fprintf(fp, "    {\n");
-    for (auto& name : names)
-    {
-        fprintf(fp, "        if (MH_DisableHookCast(&%s) != MH_OK)\n", name.c_str());
-        fprintf(fp, "            return FALSE;\n");
+        fprintf(fp, "        CH_DoHook(\"%s\", \"%s\", fn_%s);\n",
+                name.c_str(), "user32.dll", name.c_str(), name.c_str());
     }
     fprintf(fp, "    }\n");
     fprintf(fp, "    return TRUE;\n");
@@ -718,7 +688,6 @@ BOOL DoUpdateFile(HWND hwnd, std::vector<std::string>& names)
     DoWriteFunctionVariables(fp, names);
     DoWriteDetourFunctions(fp, names);
     DoWriteDoHook(fp, names);
-    DoWriteDoEnableHook(fp, names);
 
     fclose(fp);
     return TRUE;
