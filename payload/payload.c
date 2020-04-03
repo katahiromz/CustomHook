@@ -8,31 +8,46 @@ static DWORD s_dwCurrentProcessId = 0;
 static HANDLE s_hCurrentProcess = NULL;
 
 typedef PVOID (WINAPI *FN_ImageDirectoryEntryToData)(PVOID, BOOLEAN, USHORT, PULONG);
-static FN_ImageDirectoryEntryToData s_fnImageDirectoryEntryToData = NULL;
+static FN_ImageDirectoryEntryToData ch_fn_ImageDirectoryEntryToData = NULL;
 
 typedef BOOL (WINAPI *FN_VirtualProtect)(LPVOID, SIZE_T, DWORD, PDWORD);
-static FN_VirtualProtect s_fnVirtualProtect = NULL;
+static FN_VirtualProtect ch_fn_VirtualProtect = NULL;
 
 typedef BOOL (WINAPI *FN_WriteProcessMemory)(HANDLE, LPVOID, LPCVOID, SIZE_T, SIZE_T *);
-static FN_WriteProcessMemory s_fnWriteProcessMemory = NULL;
+static FN_WriteProcessMemory ch_fn_WriteProcessMemory = NULL;
 
 typedef int (WINAPIV *FN_wsprintfA)(LPSTR, LPCSTR, ...);
-static FN_wsprintfA s_fnwsprintfA = NULL;
+static FN_wsprintfA ch_fn_wsprintfA = NULL;
 
 typedef int (WINAPIV *FN_wsprintfW)(LPWSTR, LPCWSTR, ...);
-static FN_wsprintfW s_fnwsprintfW = NULL;
+static FN_wsprintfW ch_fn_wsprintfW = NULL;
+
+typedef int (WINAPI *FN_wvsprintfA)(LPSTR, LPCSTR, va_list);
+static FN_wvsprintfA ch_fn_wvsprintfA = &wvsprintfA;
+
+typedef HANDLE (WINAPI *FN_CreateFileW)(LPCWSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE);
+static FN_CreateFileW ch_fn_CreateFileW = &CreateFileW;
+
+typedef DWORD (WINAPI *FN_SetFilePointer)(HANDLE, LONG, PLONG, DWORD);
+static FN_SetFilePointer ch_fn_SetFilePointer = &SetFilePointer;
+
+typedef BOOL (WINAPI *FN_WriteFile)(HANDLE, LPCVOID, DWORD, LPDWORD, LPOVERLAPPED);
+static FN_WriteFile ch_fn_WriteFile = &WriteFile;
+
+typedef BOOL (WINAPI *FN_CloseHandle)(HANDLE);
+static FN_CloseHandle ch_fn_CloseHandle = &CloseHandle;
 
 LPCSTR do_LPCSTR(LPCSTR str)
 {
     static CHAR s_szText[1024];
     if (str == NULL)
         return "(null)";
-    if (s_fnwsprintfA)
+    if (ch_fn_wsprintfA)
     {
         if (HIWORD(str) == 0)
-            s_fnwsprintfA(s_szText, "#%u", LOWORD(str));
+            ch_fn_wsprintfA(s_szText, "#%u", LOWORD(str));
         else
-            s_fnwsprintfA(s_szText, "'%s'", str);
+            ch_fn_wsprintfA(s_szText, "'%s'", str);
     }
     else
     {
@@ -49,12 +64,12 @@ LPCWSTR do_LPCWSTR(LPCWSTR str)
     static WCHAR s_szText[1024];
     if (str == NULL)
         return L"(null)";
-    if (s_fnwsprintfW)
+    if (ch_fn_wsprintfW)
     {
         if (HIWORD(str) == 0)
-            s_fnwsprintfW(s_szText, L"#%u", LOWORD(str));
+            ch_fn_wsprintfW(s_szText, L"#%u", LOWORD(str));
         else
-            s_fnwsprintfW(s_szText, L"'%ls'", str);
+            ch_fn_wsprintfW(s_szText, L"'%ls'", str);
     }
     else
     {
@@ -65,6 +80,38 @@ LPCWSTR do_LPCWSTR(LPCWSTR str)
     }
     return s_szText;
 }
+
+void CH_TraceV(const char *fmt, va_list va)
+{
+    HANDLE hFile;
+    static CHAR s_buf[1024];
+    DWORD cbWritten;
+
+    hFile = ch_fn_CreateFileW(L"ch-trace.log",
+                              GENERIC_READ | GENERIC_WRITE,
+                              FILE_SHARE_READ,
+                              NULL,
+                              OPEN_ALWAYS,
+                              FILE_ATTRIBUTE_NORMAL,
+                              NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return;
+
+    ch_fn_SetFilePointer(hFile, 0, NULL, FILE_END);
+    ch_fn_wvsprintfA(s_buf, fmt, va);
+    ch_fn_WriteFile(hFile, s_buf, strlen(s_buf), &cbWritten, NULL);
+    ch_fn_CloseHandle(hFile);
+}
+
+void CH_Trace(const char *fmt, ...)
+{
+    va_list va;
+    va_start(va, fmt);
+    CH_TraceV(fmt, va);
+    va_end(va);
+}
+
+#define TRACE CH_Trace
 
 LPVOID
 CH_DoHookEx(HMODULE hModule, const char *module_name, const char *func_name, LPVOID fn)
@@ -82,10 +129,10 @@ CH_DoHookEx(HMODULE hModule, const char *module_name, const char *func_name, LPV
     if (hModule == NULL)
         return NULL;
 
-    if (s_fnImageDirectoryEntryToData)
+    if (ch_fn_ImageDirectoryEntryToData)
     {
         pImports = (PIMAGE_IMPORT_DESCRIPTOR)
-            s_fnImageDirectoryEntryToData(hModule, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &size);
+            ch_fn_ImageDirectoryEntryToData(hModule, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &size);
     }
     else
     {
@@ -128,19 +175,19 @@ CH_DoHookEx(HMODULE hModule, const char *module_name, const char *func_name, LPV
                     continue;
             }
 
-            if (s_fnVirtualProtect && s_fnWriteProcessMemory)
+            if (ch_fn_VirtualProtect && ch_fn_WriteProcessMemory)
             {
-                if (!s_fnVirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), PAGE_READWRITE, &dwOldProtect))
+                if (!ch_fn_VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), PAGE_READWRITE, &dwOldProtect))
                     return NULL;
 
                 fnOriginal = (LPVOID)pIAT->u1.Function;
                 if (fn)
                 {
-                    s_fnWriteProcessMemory(s_hCurrentProcess, &pIAT->u1.Function, &fn, sizeof(pIAT->u1.Function), NULL);
+                    ch_fn_WriteProcessMemory(s_hCurrentProcess, &pIAT->u1.Function, &fn, sizeof(pIAT->u1.Function), NULL);
                     pIAT->u1.Function = (DWORD_PTR)fn;
                 }
 
-                s_fnVirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), dwOldProtect, &dwOldProtect);
+                ch_fn_VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), dwOldProtect, &dwOldProtect);
             }
             else
             {
@@ -185,20 +232,35 @@ CH_DoHook(const char *module_name, const char *func_name, LPVOID fn)
 
 BOOL CH_Init(BOOL bInit)
 {
+    LPVOID pv;
     if (bInit)
     {
         s_dwCurrentProcessId = GetCurrentProcessId();
         s_hCurrentProcess = GetCurrentProcess();
-        s_fnImageDirectoryEntryToData = CH_DoHook("imagehlp.dll", "ImageDirectoryEntryToData", NULL);
-        s_fnVirtualProtect = CH_DoHook("kernel32.dll", "VirtualProtect", NULL);
-        s_fnWriteProcessMemory = CH_DoHook("kernel32.dll", "WriteProcessMemory", NULL);
-        s_fnwsprintfA = CH_DoHook("user32.dll", "wsprintfA", NULL);
-        s_fnwsprintfW = CH_DoHook("user32.dll", "wsprintfW", NULL);
+        ch_fn_ImageDirectoryEntryToData = CH_DoHook("imagehlp.dll", "ImageDirectoryEntryToData", NULL);
+        ch_fn_VirtualProtect = CH_DoHook("kernel32.dll", "VirtualProtect", NULL);
+        ch_fn_WriteProcessMemory = CH_DoHook("kernel32.dll", "WriteProcessMemory", NULL);
+        ch_fn_wsprintfA = CH_DoHook("user32.dll", "wsprintfA", NULL);
+        ch_fn_wsprintfW = CH_DoHook("user32.dll", "wsprintfW", NULL);
+        pv = CH_DoHook("user32.dll", "wvsprintfA", NULL);
+        if (pv)
+            ch_fn_wvsprintfA = pv;
+        pv = CH_DoHook("kernel32.dll", "CreateFileW", NULL);
+        if (pv)
+            ch_fn_CreateFileW = pv;
+        pv = CH_DoHook("kernel32.dll", "SetFilePointer", NULL);
+        if (pv)
+            ch_fn_SetFilePointer = pv;
+        pv = CH_DoHook("kernel32.dll", "WriteFile", NULL);
+        if (pv)
+            ch_fn_WriteFile = pv;
+        pv = CH_DoHook("kernel32.dll", "CloseHandle", NULL);
+        if (pv)
+            ch_fn_CloseHandle = pv;
     }
     return TRUE;
 }
 
-#include "trace.h"
 #include "hookbody.h"
 
 EXTERN_C BOOL WINAPI
