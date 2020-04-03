@@ -491,6 +491,10 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, const std::string& name, const FUNCTION
         DoWriteSpecifier(fp, name, fields);
         fprintf(fp, "\\n\", ret, ret);\n");
     }
+    else
+    {
+        fprintf(fp, "    TRACE(\"%s returned\\n\");\n", name.c_str());
+    }
 
     fprintf(fp, "    SetLastError(dwLastError);\n");
 
@@ -649,6 +653,10 @@ BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, const std::string& name, const F
         split(fields, fn.ret, ':');
         DoWriteSpecifier(fp, name, fields);
         fprintf(fp, "\\n\", ret, ret);\n");
+    }
+    else
+    {
+        fprintf(fp, "    TRACE(\"%s returned\\n\");\n", name.c_str());
     }
 
     fprintf(fp, "    SetLastError(dwLastError);\n");
