@@ -18,28 +18,26 @@ static FN_WriteProcessMemory s_fnWriteProcessMemory = NULL;
 
 LPCSTR do_LPCSTR(LPCSTR str)
 {
+    static CHAR s_szText[1024];
     if (str == NULL)
         return "(null)";
     if (HIWORD(str) == 0)
-    {
-        static CHAR s_szText[1024];
         wsprintfA(s_szText, "#%u", LOWORD(str));
-        return s_szText;
-    }
-    return str;
+    else
+        wsprintfA(s_szText, "'%s'", str);
+    return s_szText;
 }
 
 LPCWSTR do_LPCWSTR(LPCWSTR str)
 {
+    static WCHAR s_szText[1024];
     if (str == NULL)
         return L"(null)";
     if (HIWORD(str) == 0)
-    {
-        static WCHAR s_szText[1024];
         wsprintfW(s_szText, L"#%u", LOWORD(str));
-        return s_szText;
-    }
-    return str;
+    else
+        wsprintfW(s_szText, L"'%ls'", str);
+    return s_szText;
 }
 
 LPVOID

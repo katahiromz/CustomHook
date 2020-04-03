@@ -25,7 +25,7 @@ struct FUNCTION
 
 static std::map<std::string, FUNCTION> s_functions;
 
-std::set<std::string> s_excludes =
+std::set<std::string> s_exclude_names =
 {
     "GetLastError",
     "SetLastError",
@@ -34,6 +34,11 @@ std::set<std::string> s_excludes =
     "fclose",
     "wsprintfA",
     "wsprintfW",
+};
+
+std::set<std::string> s_exclude_dlls =
+{
+    "msvcrt.dll"
 };
 
 template <typename t_string_container, 
@@ -97,6 +102,7 @@ BOOL GetWondersDirectory(LPWSTR pszPath, INT cchPath)
 }
 
 std::map<std::string, std::string> s_fn2dll;
+std::map<std::string, std::string> s_dll2fn;
 
 BOOL DoLoadDLLInfo(LPCWSTR prefix, LPCWSTR suffix)
 {
@@ -105,6 +111,7 @@ BOOL DoLoadDLLInfo(LPCWSTR prefix, LPCWSTR suffix)
     filename += suffix;
 
     s_fn2dll.clear();
+    s_dll2fn.clear();
 
     FILE *fp = _wfopen(filename.c_str(), L"r");
     if (!fp)
@@ -121,7 +128,8 @@ BOOL DoLoadDLLInfo(LPCWSTR prefix, LPCWSTR suffix)
         if (fields.size() < 2)
             continue;
 
-        s_fn2dll[fields[0]] = fields[1];
+        s_fn2dll.insert(std::make_pair(fields[0], fields[1]));
+        s_dll2fn.insert(std::make_pair(fields[1], fields[0]));
     }
 
     fclose(fp);
@@ -160,6 +168,21 @@ BOOL DoLoadFunctions(LPCWSTR prefix, LPCWSTR suffix)
     return TRUE;
 }
 
+bool is_exclude_name(const std::string& name)
+{
+    if (s_exclude_names.count(name) > 0)
+        return true;
+
+    auto it = s_functions.find(name);
+    if (it == s_functions.end())
+        return true;
+
+    if (it->second.convention != "__stdcall")
+        return true;
+
+    return false;
+}
+
 void DoUpdateList(HWND hwnd, LPCSTR pszText)
 {
     HWND hLst1 = GetDlgItem(hwnd, lst1);
@@ -168,7 +191,7 @@ void DoUpdateList(HWND hwnd, LPCSTR pszText)
     SendDlgItemMessageA(hwnd, lst1, LB_RESETCONTENT, 0, 0);
     for (auto& pair : s_functions)
     {
-        if (s_excludes.count(pair.first.c_str()) > 0)
+        if (is_exclude_name(pair.first))
             continue;
 
         if (pair.first.find(pszText) == 0)
@@ -313,13 +336,13 @@ BOOL DoWriteSpecifier(FILE *fp, const std::string& name, std::vector<std::string
             fields[1] == "const CHAR*" ||
             fields[1] == "const char*")
         {
-            fprintf(fp, "'%%s'");
+            fprintf(fp, "%%s");
         }
         else if (fields[1] == "LPCWSTR" ||
                  fields[1] == "const WCHAR*" ||
                  fields[1] == "const wchar_t*")
         {
-            fprintf(fp, "'%%ls'");
+            fprintf(fp, "%%ls");
         }
         else
         {
@@ -470,7 +493,7 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, const std::string& name, const FUNCTION
         fprintf(fp, "    TRACE(\"%s returned ", name.c_str());
         split(fields, fn.ret, ':');
         DoWriteSpecifier(fp, name, fields);
-        fprintf(fp, "\\n\", ret);\n");
+        fprintf(fp, "\\n\", ret, ret);\n");
     }
 
     fprintf(fp, "    SetLastError(dwLastError);\n");
@@ -629,7 +652,7 @@ BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, const std::string& name, const F
         fprintf(fp, "    TRACE(\"%s returned ", name.c_str());
         split(fields, fn.ret, ':');
         DoWriteSpecifier(fp, name, fields);
-        fprintf(fp, "\\n\", ret);\n");
+        fprintf(fp, "\\n\", ret, ret);\n");
     }
 
     fprintf(fp, "    SetLastError(dwLastError);\n");
@@ -758,7 +781,7 @@ BOOL DoWriteDoHook(FILE *fp, const std::vector<std::string>& names)
 
 BOOL DoUpdateFile(HWND hwnd, std::vector<std::string>& names)
 {
-    for (auto& item : s_excludes)
+    for (auto& item : s_exclude_names)
     {
         names.erase(std::remove(names.begin(), names.end(), item), names.end());
     }
@@ -813,7 +836,7 @@ void OnAdd(HWND hwnd)
         SendDlgItemMessageA(hwnd, lst1, LB_GETTEXT, selection[i], (LPARAM)szBuff);
         if ((INT)SendDlgItemMessageA(hwnd, lst2, LB_FINDSTRINGEXACT, -1, (LPARAM)szBuff) == LB_ERR)
         {
-            if (s_excludes.count(szBuff) > 0)
+            if (is_exclude_name(szBuff))
                 continue;
 
             SendDlgItemMessageA(hwnd, lst2, LB_ADDSTRING, 0, (LPARAM)szBuff);
@@ -1076,7 +1099,7 @@ BOOL DoLoadFile(HWND hwnd, LPCWSTR pszFile)
 
         if ((INT)SendDlgItemMessageA(hwnd, lst1, LB_FINDSTRINGEXACT, -1, (LPARAM)name.c_str()) == LB_ERR)
         {
-            if (s_excludes.count(name) > 0)
+            if (is_exclude_name(name))
                 continue;
 
             SendDlgItemMessageA(hwnd, lst1, LB_ADDSTRING, 0, (LPARAM)name.c_str());
@@ -1098,7 +1121,7 @@ BOOL DoLoadFile(HWND hwnd, LPCWSTR pszFile)
 
         if ((INT)SendDlgItemMessageA(hwnd, lst1, LB_FINDSTRINGEXACT, -1, (LPARAM)name.c_str()) == LB_ERR)
         {
-            if (s_excludes.count(name) > 0)
+            if (is_exclude_name(name))
                 continue;
 
             SendDlgItemMessageA(hwnd, lst1, LB_ADDSTRING, 0, (LPARAM)name.c_str());

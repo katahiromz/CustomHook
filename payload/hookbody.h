@@ -9,11 +9,11 @@ DetourMessageBoxW(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT uType)
 {
     DWORD dwLastError;
     int ret;
-    TRACE("MessageBoxW(hWnd=%p, lpText='%ls', lpCaption='%ls', uType=%u (0x%X))\n",
+    TRACE("MessageBoxW(hWnd=%p, lpText=%ls, lpCaption=%ls, uType=%u (0x%X))\n",
           hWnd, do_LPCWSTR(lpText), do_LPCWSTR(lpCaption), uType, uType);
     ret = fn_MessageBoxW(hWnd, lpText, lpCaption, uType);
     dwLastError = GetLastError();
-    TRACE("MessageBoxW returned %d (0x%X)\n", ret);
+    TRACE("MessageBoxW returned %d (0x%X)\n", ret, ret);
     SetLastError(dwLastError);
     return ret;
 }
