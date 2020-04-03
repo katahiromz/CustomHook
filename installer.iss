@@ -44,7 +44,6 @@ Source: "build\target.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "payload\CMakeLists.txt"; DestDir: "{app}\payload"; Flags: ignoreversion
 Source: "payload\hookbody.h"; DestDir: "{app}\payload"; Flags: ignoreversion
 Source: "payload\payload.c"; DestDir: "{app}\payload"; Flags: ignoreversion
-Source: "payload\trace.h"; DestDir: "{app}\payload"; Flags: ignoreversion
 Source: "payload\win32.h"; DestDir: "{app}\payload"; Flags: ignoreversion
 Source: "payload\mzcrt\mzcrt.h"; DestDir: "{app}\payload\mzcrt"; Flags: ignoreversion
 Source: "payload\mzcrt\mzctype.h"; DestDir: "{app}\payload\mzcrt"; Flags: ignoreversion
