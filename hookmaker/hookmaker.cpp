@@ -29,9 +29,6 @@ std::set<std::string> s_exclude_names =
 {
     "GetLastError",
     "SetLastError",
-    "fopen",
-    "vfprintf",
-    "fclose",
 };
 
 std::set<std::string> s_exclude_dlls =
