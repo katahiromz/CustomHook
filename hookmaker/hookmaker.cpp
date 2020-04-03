@@ -1195,7 +1195,7 @@ BOOL GetPathOfShortcut(HWND hWnd, LPCWSTR pszLnkFile, LPWSTR pszPath)
     if (SUCCEEDED(hRes))
     {
         if (SUCCEEDED(hRes = CoCreateInstance(CLSID_ShellLink, NULL, 
-            CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID *)&pShellLink)))
+            CLSCTX_INPROC_SERVER, IID_IShellLinkW, (LPVOID *)&pShellLink)))
         {
             if (SUCCEEDED(hRes = pShellLink->QueryInterface(IID_IPersistFile, 
                 (VOID **)&pPersistFile)))
