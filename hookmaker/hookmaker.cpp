@@ -27,17 +27,11 @@ static std::map<std::string, FUNCTION> s_functions;
 
 std::set<std::string> s_excludes =
 {
-    "VirtualAlloc",
-    "VirtualQuery",
-    "VirtualProtect",
-    "VirtualFree",
     "GetLastError",
-    "GetSystemInfo",
-    "CloseHandle",
-    "InitializeCriticalSection",
-    "EnterCriticalSection",
-    "LeaveCriticalSection",
-    "DeleteCriticalSection",
+    "SetLastError",
+    "fopen",
+    "vfprintf",
+    "fclose",
 };
 
 template <typename t_string_container, 
@@ -97,6 +91,38 @@ BOOL GetWondersDirectory(LPWSTR pszPath, INT cchPath)
     }
 
     lstrcpynW(pszPath, szPath, cchPath);
+    return TRUE;
+}
+
+std::map<std::string, std::string> s_fn2dll;
+
+BOOL DoLoadDLLInfo(LPCWSTR prefix, LPCWSTR suffix)
+{
+    std::wstring filename = prefix;
+    filename += L"dll-info";
+    filename += suffix;
+
+    s_fn2dll.clear();
+
+    FILE *fp = _wfopen(filename.c_str(), L"r");
+    if (!fp)
+        return FALSE;
+
+    char buf[512];
+    fgets(buf, ARRAYSIZE(buf), fp);
+    while (fgets(buf, ARRAYSIZE(buf), fp))
+    {
+        StrTrimA(buf, " \t\r\n");
+
+        std::vector<std::string> fields;
+        split(fields, buf, '\t');
+        if (fields.size() < 2)
+            continue;
+
+        s_fn2dll[fields[0]] = fields[1];
+    }
+
+    fclose(fp);
     return TRUE;
 }
 
@@ -180,6 +206,17 @@ BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
     if (!DoLoadFunctions(szPath, L"-cl-64-w.dat"))
 #else
     if (!DoLoadFunctions(szPath, L"-cl-32-w.dat"))
+#endif
+    {
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTLOADWONDERS), NULL, MB_ICONERROR);
+        EndDialog(hwnd, IDABORT);
+        return FALSE;
+    }
+
+#ifdef _WIN64
+    if (!DoLoadDLLInfo(szPath, L"-64.dat"))
+#else
+    if (!DoLoadDLLInfo(szPath, L"-32.dat"))
 #endif
     {
         MessageBoxW(hwnd, LoadStringDx(IDS_CANTLOADWONDERS), NULL, MB_ICONERROR);
@@ -642,8 +679,13 @@ BOOL DoWriteDoHook(FILE *fp, const std::vector<std::string>& names)
     fprintf(fp, "    {\n");
     for (auto& name : names)
     {
+        auto it = s_fn2dll.find(name);
+        if (it == s_fn2dll.end())
+            continue;
+        auto& dll_name = it->second;
+
         fprintf(fp, "        fn_%s = CH_DoHook(\"%s\", \"%s\", &Detour%s);\n",
-                name.c_str(), "user32.dll", name.c_str(), name.c_str());
+                name.c_str(), dll_name.c_str(), name.c_str(), name.c_str());
         fprintf(fp, "        if (!fn_%s) return FALSE;\n", name.c_str());
     }
     fprintf(fp, "    }\n");
@@ -651,8 +693,13 @@ BOOL DoWriteDoHook(FILE *fp, const std::vector<std::string>& names)
     fprintf(fp, "    {\n");
     for (auto& name : names)
     {
+        auto it = s_fn2dll.find(name);
+        if (it == s_fn2dll.end())
+            continue;
+        auto& dll_name = it->second;
+
         fprintf(fp, "        CH_DoHook(\"%s\", \"%s\", fn_%s);\n",
-                name.c_str(), "user32.dll", name.c_str(), name.c_str());
+                dll_name.c_str(), name.c_str(), name.c_str());
     }
     fprintf(fp, "    }\n");
     fprintf(fp, "    return TRUE;\n");

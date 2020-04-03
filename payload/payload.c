@@ -1,4 +1,6 @@
 #include "win32.h"
+#include "mzcrt/mzstr.h"
+#include "mzcrt/mzlib.h"
 
 BOOL DoHook(BOOL bHook);
 

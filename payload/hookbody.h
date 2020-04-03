@@ -27,7 +27,7 @@ BOOL DoHook(BOOL bHook)
     }
     else
     {
-        CH_DoHook("MessageBoxW", "user32.dll", fn_MessageBoxW);
+        CH_DoHook("user32.dll", "MessageBoxW", fn_MessageBoxW);
     }
     return TRUE;
 }
