@@ -3,6 +3,7 @@
 #include <commctrl.h>
 #include <commdlg.h>
 #include <shlwapi.h>
+#include <shlobj.h>
 #include <tchar.h>
 #include <string>
 #include <cstdio>
@@ -1181,10 +1182,57 @@ void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     }
 }
 
+BOOL GetPathOfShortcut(HWND hWnd, LPCWSTR pszLnkFile, LPWSTR pszPath)
+{
+    WCHAR            szPath[MAX_PATH];
+    IShellLinkW*     pShellLink;
+    IPersistFile*    pPersistFile;
+    WIN32_FIND_DATAW find;
+    BOOL             bRes = FALSE;
+
+    szPath[0] = '\0';
+    HRESULT hRes = CoInitialize(NULL);
+    if (SUCCEEDED(hRes))
+    {
+        if (SUCCEEDED(hRes = CoCreateInstance(CLSID_ShellLink, NULL, 
+            CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID *)&pShellLink)))
+        {
+            if (SUCCEEDED(hRes = pShellLink->QueryInterface(IID_IPersistFile, 
+                (VOID **)&pPersistFile)))
+            {
+                hRes = pPersistFile->Load(pszLnkFile,  STGM_READ);
+                if (SUCCEEDED(hRes))
+                {
+                    if (SUCCEEDED(hRes = pShellLink->GetPath(szPath, MAX_PATH, &find, 0)))
+                    {
+                        if ('\0' != szPath[0])
+                        {
+                            lstrcpynW(pszPath, szPath, MAX_PATH);
+                            bRes = TRUE;
+                        }
+                    }
+                }
+                pPersistFile->Release();
+            }
+            pShellLink->Release();
+        }
+        CoUninitialize();
+    }
+    return bRes;
+}
+
 void OnDropFiles(HWND hwnd, HDROP hdrop)
 {
     WCHAR szFile[MAX_PATH];
     DragQueryFileW(hdrop, 0, szFile, ARRAYSIZE(szFile));
+
+    if (lstrcmpiW(PathFindExtensionW(szFile), L".lnk") == 0)
+    {
+        WCHAR szTarget[MAX_PATH];
+        GetPathOfShortcut(hwnd, szFile, szTarget);
+        lstrcpynW(szFile, szTarget, MAX_PATH);
+    }
+
     DoLoadFile(hwnd, szFile);
     DragFinish(hdrop);
 }
