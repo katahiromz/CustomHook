@@ -37,6 +37,9 @@ static FN_WriteFile ch_fn_WriteFile = &WriteFile;
 typedef BOOL (WINAPI *FN_CloseHandle)(HANDLE);
 static FN_CloseHandle ch_fn_CloseHandle = &CloseHandle;
 
+typedef HMODULE (WINAPI *FN_GetModuleHandleA)(LPCSTR);
+static FN_GetModuleHandleA ch_fn_GetModuleHandleA = &GetModuleHandleA;
+
 LPCSTR do_LPCSTR(LPCSTR str)
 {
     static CHAR s_szText[1024];
@@ -217,12 +220,12 @@ CH_DoHook(const char *module_name, const char *func_name, LPVOID fn)
     HMODULE hModule;
     LPVOID ret;
 
-    hModule = GetModuleHandleA(module_name);
+    hModule = ch_fn_GetModuleHandleA(module_name);
     ret = CH_DoHookEx(hModule, module_name, func_name, fn);
     if (ret)
         return ret;
 
-    hModule = GetModuleHandleA(NULL);
+    hModule = ch_fn_GetModuleHandleA(NULL);
     ret = CH_DoHookEx(hModule, module_name, func_name, fn);
     if (ret)
         return ret;
@@ -257,6 +260,9 @@ BOOL CH_Init(BOOL bInit)
         pv = CH_DoHook("kernel32.dll", "CloseHandle", NULL);
         if (pv)
             ch_fn_CloseHandle = pv;
+        pv = CH_DoHook("kernel32.dll", "GetModuleHandleA", NULL);
+        if (pv)
+            ch_fn_GetModuleHandleA = pv;
     }
     return TRUE;
 }
