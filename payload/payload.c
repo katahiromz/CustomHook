@@ -42,46 +42,52 @@ static FN_GetModuleHandleA ch_fn_GetModuleHandleA = &GetModuleHandleA;
 
 LPCSTR do_LPCSTR(LPCSTR str)
 {
-    static CHAR s_szText[1024];
+    static CHAR s_szText[6][1024];
+    static INT s_index = 0;
+    CHAR *psz = s_szText[(s_index++) % 6];
+
     if (str == NULL)
         return "(null)";
     if (ch_fn_wsprintfA)
     {
         if (HIWORD(str) == 0)
-            ch_fn_wsprintfA(s_szText, "#%u", LOWORD(str));
+            ch_fn_wsprintfA(psz, "#%u", LOWORD(str));
         else
-            ch_fn_wsprintfA(s_szText, "'%s'", str);
+            ch_fn_wsprintfA(psz, "'%s'", str);
     }
     else
     {
         if (HIWORD(str) == 0)
-            wsprintfA(s_szText, "#%u", LOWORD(str));
+            wsprintfA(psz, "#%u", LOWORD(str));
         else
-            wsprintfA(s_szText, "'%s'", str);
+            wsprintfA(psz, "'%s'", str);
     }
-    return s_szText;
+    return psz;
 }
 
 LPCWSTR do_LPCWSTR(LPCWSTR str)
 {
-    static WCHAR s_szText[1024];
+    static WCHAR s_szText[6][1024];
+    static INT s_index = 0;
+    WCHAR *psz = s_szText[(s_index++) % 6];
+
     if (str == NULL)
         return L"(null)";
     if (ch_fn_wsprintfW)
     {
         if (HIWORD(str) == 0)
-            ch_fn_wsprintfW(s_szText, L"#%u", LOWORD(str));
+            ch_fn_wsprintfW(psz, L"#%u", LOWORD(str));
         else
-            ch_fn_wsprintfW(s_szText, L"'%ls'", str);
+            ch_fn_wsprintfW(psz, L"'%ls'", str);
     }
     else
     {
         if (HIWORD(str) == 0)
-            wsprintfW(s_szText, L"#%u", LOWORD(str));
+            wsprintfW(psz, L"#%u", LOWORD(str));
         else
-            wsprintfW(s_szText, L"'%ls'", str);
+            wsprintfW(psz, L"'%ls'", str);
     }
-    return s_szText;
+    return psz;
 }
 
 void CH_TraceV(const char *fmt, va_list va)
