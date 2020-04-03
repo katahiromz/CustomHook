@@ -30,6 +30,9 @@ std::set<std::string> s_exclude_names =
 {
 };
 
+std::map<std::string, std::string> s_fn2dll;
+std::map<std::string, std::string> s_dll2fn;
+
 template <typename t_string_container, 
           typename t_string = typename t_string_container::value_type>
 void split(t_string_container& container,
@@ -89,9 +92,6 @@ BOOL GetWondersDirectory(LPWSTR pszPath, INT cchPath)
     lstrcpynW(pszPath, szPath, cchPath);
     return TRUE;
 }
-
-std::map<std::string, std::string> s_fn2dll;
-std::map<std::string, std::string> s_dll2fn;
 
 BOOL DoLoadDLLInfo(LPCWSTR prefix, LPCWSTR suffix)
 {
@@ -1103,7 +1103,6 @@ BOOL DoLoadFile(HWND hwnd, LPCWSTR pszFile)
         }
     }
 
-#if 0 // Delay loading is not supported yet
     DelayTable delay;
     module.load_delay_table(delay);
     for (auto& entry : delay)
@@ -1125,7 +1124,6 @@ BOOL DoLoadFile(HWND hwnd, LPCWSTR pszFile)
             SendDlgItemMessageA(hwnd, lst1, LB_ADDSTRING, 0, (LPARAM)name.c_str());
         }
     }
-#endif
 
     INT i, nCount = SendDlgItemMessageA(hwnd, lst1, LB_GETCOUNT, 0, 0);
     for (i = 0; i < nCount; ++i)

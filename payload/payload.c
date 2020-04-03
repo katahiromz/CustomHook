@@ -1,4 +1,5 @@
 #include "win32.h"
+#include <delayimp.h>
 #include "mzcrt/mzstr.h"
 #include "mzcrt/mzlib.h"
 
@@ -131,7 +132,7 @@ void CH_Trace(const char *fmt, ...)
 #define TRACE CH_Trace
 
 LPVOID
-CH_DoHookEx(HMODULE hModule, const char *module_name, const char *func_name, LPVOID fn)
+CH_DoHookImportEx(HMODULE hModule, const char *module_name, const char *func_name, LPVOID fn)
 {
     ULONG size;
     PIMAGE_IMPORT_DESCRIPTOR pImports;
@@ -229,21 +230,145 @@ CH_DoHookEx(HMODULE hModule, const char *module_name, const char *func_name, LPV
 }
 
 LPVOID
-CH_DoHook(const char *module_name, const char *func_name, LPVOID fn)
+CH_DoHookDelayEx(HMODULE hModule, const char *module_name, const char *func_name, LPVOID fn)
+{
+    ULONG size;
+    ImgDelayDescr *pDelay;
+    LPSTR mod_name;
+    PIMAGE_THUNK_DATA pIAT;
+    PIMAGE_THUNK_DATA pINT;
+    WORD ordinal;
+    PIMAGE_IMPORT_BY_NAME pName;
+    DWORD dwOldProtect;
+    LPVOID fnOriginal;
+
+    if (hModule == NULL)
+        return NULL;
+
+    if (ch_fn_ImageDirectoryEntryToData)
+    {
+        pDelay = (ImgDelayDescr *)
+            ch_fn_ImageDirectoryEntryToData(hModule, TRUE, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT, &size);
+    }
+    else
+    {
+        pDelay = (ImgDelayDescr *)
+            ImageDirectoryEntryToData(hModule, TRUE, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT, &size);
+    }
+
+    for (; pDelay->rvaDLLName != 0; ++pDelay)
+    {
+        mod_name = (LPSTR)((LPBYTE)hModule + pDelay->rvaDLLName);
+        if (_stricmp(module_name, mod_name) != 0)
+            continue;
+
+        pIAT = (PIMAGE_THUNK_DATA)((LPBYTE)hModule + pDelay->rvaIAT);
+        pINT = (PIMAGE_THUNK_DATA)((LPBYTE)hModule + pDelay->rvaINT);
+        for (; pINT->u1.AddressOfData != 0 && pIAT->u1.Function != 0; pIAT++, pINT++)
+        {
+            if (IMAGE_SNAP_BY_ORDINAL(pINT->u1.Ordinal))
+            {
+                ordinal = (WORD)IMAGE_ORDINAL(pINT->u1.Ordinal);
+                if (func_name[0] == '#')
+                {
+                    if (atoi(&func_name[1]) != ordinal)
+                        continue;
+                }
+                else if (HIWORD(func_name) == 0)
+                {
+                    if (LOWORD(func_name) != ordinal)
+                        continue;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            else
+            {
+                pName = (PIMAGE_IMPORT_BY_NAME)((LPBYTE)hModule + pINT->u1.AddressOfData);
+                if (_stricmp((LPSTR)pName->Name, func_name) != 0)
+                    continue;
+            }
+
+            if (ch_fn_VirtualProtect && ch_fn_WriteProcessMemory)
+            {
+                if (!ch_fn_VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), PAGE_READWRITE, &dwOldProtect))
+                    return NULL;
+
+                fnOriginal = (LPVOID)pIAT->u1.Function;
+                if (fn)
+                {
+                    ch_fn_WriteProcessMemory(s_hCurrentProcess, &pIAT->u1.Function, &fn, sizeof(pIAT->u1.Function), NULL);
+                    pIAT->u1.Function = (DWORD_PTR)fn;
+                }
+
+                ch_fn_VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), dwOldProtect, &dwOldProtect);
+            }
+            else
+            {
+                if (!VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), PAGE_READWRITE, &dwOldProtect))
+                    return NULL;
+
+                fnOriginal = (LPVOID)pIAT->u1.Function;
+                if (fn)
+                {
+                    WriteProcessMemory(s_hCurrentProcess, &pIAT->u1.Function, &fn, sizeof(pIAT->u1.Function), NULL);
+                    pIAT->u1.Function = (DWORD_PTR)fn;
+                }
+
+                VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), dwOldProtect, &dwOldProtect);
+            }
+
+            return fnOriginal;
+        }
+    }
+
+    return NULL;
+}
+
+LPVOID
+CH_DoHookImport(const char *module_name, const char *func_name, LPVOID fn)
 {
     HMODULE hModule;
     LPVOID ret;
 
     hModule = ch_fn_GetModuleHandleA(module_name);
-    ret = CH_DoHookEx(hModule, module_name, func_name, fn);
+    ret = CH_DoHookImportEx(hModule, module_name, func_name, fn);
     if (ret)
         return ret;
 
     hModule = ch_fn_GetModuleHandleA(NULL);
-    ret = CH_DoHookEx(hModule, module_name, func_name, fn);
+    ret = CH_DoHookImportEx(hModule, module_name, func_name, fn);
+    return ret;
+}
+
+LPVOID
+CH_DoHookDelay(const char *module_name, const char *func_name, LPVOID fn)
+{
+    HMODULE hModule;
+    LPVOID ret;
+
+    hModule = ch_fn_GetModuleHandleA(module_name);
+    ret = CH_DoHookDelayEx(hModule, module_name, func_name, fn);
     if (ret)
         return ret;
 
+    hModule = ch_fn_GetModuleHandleA(NULL);
+    ret = CH_DoHookDelayEx(hModule, module_name, func_name, fn);
+    return ret;
+}
+
+LPVOID
+CH_DoHook(const char *module_name, const char *func_name, LPVOID fn)
+{
+    LPVOID ret;
+
+    ret = CH_DoHookImport(module_name, func_name, fn);
+    if (ret)
+        return ret;
+
+    ret = CH_DoHookDelay(module_name, func_name, fn);
     return ret;
 }
 
@@ -254,33 +379,33 @@ BOOL CH_Init(BOOL bInit)
     {
         s_dwCurrentProcessId = GetCurrentProcessId();
         s_hCurrentProcess = GetCurrentProcess();
-        ch_fn_ImageDirectoryEntryToData = CH_DoHook("imagehlp.dll", "ImageDirectoryEntryToData", NULL);
-        ch_fn_VirtualProtect = CH_DoHook("kernel32.dll", "VirtualProtect", NULL);
-        ch_fn_WriteProcessMemory = CH_DoHook("kernel32.dll", "WriteProcessMemory", NULL);
-        ch_fn_wsprintfA = CH_DoHook("user32.dll", "wsprintfA", NULL);
-        ch_fn_wsprintfW = CH_DoHook("user32.dll", "wsprintfW", NULL);
-        pv = CH_DoHook("user32.dll", "wvsprintfA", NULL);
+        ch_fn_ImageDirectoryEntryToData = CH_DoHookImport("imagehlp.dll", "ImageDirectoryEntryToData", NULL);
+        ch_fn_VirtualProtect = CH_DoHookImport("kernel32.dll", "VirtualProtect", NULL);
+        ch_fn_WriteProcessMemory = CH_DoHookImport("kernel32.dll", "WriteProcessMemory", NULL);
+        ch_fn_wsprintfA = CH_DoHookImport("user32.dll", "wsprintfA", NULL);
+        ch_fn_wsprintfW = CH_DoHookImport("user32.dll", "wsprintfW", NULL);
+        pv = CH_DoHookImport("user32.dll", "wvsprintfA", NULL);
         if (pv)
             ch_fn_wvsprintfA = pv;
-        pv = CH_DoHook("kernel32.dll", "CreateFileW", NULL);
+        pv = CH_DoHookImport("kernel32.dll", "CreateFileW", NULL);
         if (pv)
             ch_fn_CreateFileW = pv;
-        pv = CH_DoHook("kernel32.dll", "SetFilePointer", NULL);
+        pv = CH_DoHookImport("kernel32.dll", "SetFilePointer", NULL);
         if (pv)
             ch_fn_SetFilePointer = pv;
-        pv = CH_DoHook("kernel32.dll", "WriteFile", NULL);
+        pv = CH_DoHookImport("kernel32.dll", "WriteFile", NULL);
         if (pv)
             ch_fn_WriteFile = pv;
-        pv = CH_DoHook("kernel32.dll", "CloseHandle", NULL);
+        pv = CH_DoHookImport("kernel32.dll", "CloseHandle", NULL);
         if (pv)
             ch_fn_CloseHandle = pv;
-        pv = CH_DoHook("kernel32.dll", "GetModuleHandleA", NULL);
+        pv = CH_DoHookImport("kernel32.dll", "GetModuleHandleA", NULL);
         if (pv)
             ch_fn_GetModuleHandleA = pv;
-        pv = CH_DoHook("kernel32.dll", "GetLastError", NULL);
+        pv = CH_DoHookImport("kernel32.dll", "GetLastError", NULL);
         if (pv)
             ch_fn_GetLastError = pv;
-        pv = CH_DoHook("kernel32.dll", "SetLastError", NULL);
+        pv = CH_DoHookImport("kernel32.dll", "SetLastError", NULL);
         if (pv)
             ch_fn_SetLastError = pv;
     }
