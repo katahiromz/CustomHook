@@ -1102,6 +1102,7 @@ BOOL DoLoadFile(HWND hwnd, LPCWSTR pszFile)
         }
     }
 
+#if 0 // Delay loading is not supported yet
     DelayTable delay;
     module.load_delay_table(delay);
     for (auto& entry : delay)
@@ -1123,6 +1124,7 @@ BOOL DoLoadFile(HWND hwnd, LPCWSTR pszFile)
             SendDlgItemMessageA(hwnd, lst1, LB_ADDSTRING, 0, (LPARAM)name.c_str());
         }
     }
+#endif
 
     INT i, nCount = SendDlgItemMessageA(hwnd, lst1, LB_GETCOUNT, 0, 0);
     for (i = 0; i < nCount; ++i)
