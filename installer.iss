@@ -37,7 +37,6 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "README.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "build\MinHook.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "build\hookmaker.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "build\injector.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "build\payload32.dll"; DestDir: "{app}"; Flags: ignoreversion
