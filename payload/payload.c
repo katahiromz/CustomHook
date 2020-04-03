@@ -40,11 +40,13 @@ static FN_CloseHandle ch_fn_CloseHandle = &CloseHandle;
 typedef HMODULE (WINAPI *FN_GetModuleHandleA)(LPCSTR);
 static FN_GetModuleHandleA ch_fn_GetModuleHandleA = &GetModuleHandleA;
 
+#define NUM 6
+
 LPCSTR do_LPCSTR(LPCSTR str)
 {
-    static CHAR s_szText[6][1024];
+    static CHAR s_szText[NUM][1024];
     static INT s_index = 0;
-    CHAR *psz = s_szText[(s_index++) % 6];
+    CHAR *psz = s_szText[(s_index++) % NUM];
 
     if (str == NULL)
         return "(null)";
@@ -67,9 +69,9 @@ LPCSTR do_LPCSTR(LPCSTR str)
 
 LPCWSTR do_LPCWSTR(LPCWSTR str)
 {
-    static WCHAR s_szText[6][1024];
+    static WCHAR s_szText[NUM][1024];
     static INT s_index = 0;
-    WCHAR *psz = s_szText[(s_index++) % 6];
+    WCHAR *psz = s_szText[(s_index++) % NUM];
 
     if (str == NULL)
         return L"(null)";
