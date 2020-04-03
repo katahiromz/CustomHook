@@ -28,8 +28,6 @@ static std::map<std::string, FUNCTION> s_functions;
 
 std::set<std::string> s_exclude_names =
 {
-    "GetLastError",
-    "SetLastError",
 };
 
 template <typename t_string_container, 
@@ -476,7 +474,7 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, const std::string& name, const FUNCTION
     }
     fprintf(fp, ");\n");
 
-    fprintf(fp, "    dwLastError = GetLastError();\n");
+    fprintf(fp, "    dwLastError = ch_fn_GetLastError();\n");
 
     split(fields, fn.ret, ':');
     if (fields[0] != "v")
@@ -491,7 +489,7 @@ BOOL DoWriteDetourFunctionBody(FILE *fp, const std::string& name, const FUNCTION
         fprintf(fp, "    TRACE(\"%s returned\\n\");\n", name.c_str());
     }
 
-    fprintf(fp, "    SetLastError(dwLastError);\n");
+    fprintf(fp, "    ch_fn_SetLastError(dwLastError);\n");
 
     if (fields[0] != "v")
         fprintf(fp, "    return ret;\n");
@@ -639,7 +637,7 @@ BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, const std::string& name, const F
     }
     fprintf(fp, ");\n");
 
-    fprintf(fp, "    dwLastError = GetLastError();\n");
+    fprintf(fp, "    dwLastError = ch_fn_GetLastError();\n");
 
     split(fields, fn.ret, ':');
     if (fields[0] != "v")
@@ -654,7 +652,7 @@ BOOL DoWriteDetourEllipseFunctionBody(FILE *fp, const std::string& name, const F
         fprintf(fp, "    TRACE(\"%s returned\\n\");\n", name.c_str());
     }
 
-    fprintf(fp, "    SetLastError(dwLastError);\n");
+    fprintf(fp, "    ch_fn_SetLastError(dwLastError);\n");
     fprintf(fp, "    va_end(va);\n");
 
     if (fields[0] != "v")
