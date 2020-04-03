@@ -46,6 +46,13 @@ Source: "payload\hookbody.h"; DestDir: "{app}\payload"; Flags: ignoreversion
 Source: "payload\payload.c"; DestDir: "{app}\payload"; Flags: ignoreversion
 Source: "payload\trace.h"; DestDir: "{app}\payload"; Flags: ignoreversion
 Source: "payload\win32.h"; DestDir: "{app}\payload"; Flags: ignoreversion
+Source: "payload\mzcrt\mzcrt.h"; DestDir: "{app}\payload\mzcrt"; Flags: ignoreversion
+Source: "payload\mzcrt\mzctype.h"; DestDir: "{app}\payload\mzcrt"; Flags: ignoreversion
+Source: "payload\mzcrt\mzlib.h"; DestDir: "{app}\payload\mzcrt"; Flags: ignoreversion
+Source: "payload\mzcrt\mzmem.h"; DestDir: "{app}\payload\mzcrt"; Flags: ignoreversion
+Source: "payload\mzcrt\mzstr.h"; DestDir: "{app}\payload\mzcrt"; Flags: ignoreversion
+Source: "payload\mzcrt\mzwchar.h"; DestDir: "{app}\payload\mzcrt"; Flags: ignoreversion
+Source: "payload\mzcrt\mzwctype.h"; DestDir: "{app}\payload\mzcrt"; Flags: ignoreversion
 Source: "WondersXP\cr_win32.h"; DestDir: "{app}\WondersXP"; Flags: ignoreversion
 Source: "WondersXP\dll-info-32.dat"; DestDir: "{app}\WondersXP"; Flags: ignoreversion
 Source: "WondersXP\dll-info-64.dat"; DestDir: "{app}\WondersXP"; Flags: ignoreversion
