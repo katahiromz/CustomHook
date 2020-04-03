@@ -173,9 +173,6 @@ bool is_exclude_name(const std::string& name)
     if (it == s_functions.end())
         return true;
 
-    if (it->second.convention != "__stdcall")
-        return true;
-
     return false;
 }
 
