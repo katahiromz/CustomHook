@@ -391,7 +391,7 @@ BOOL DoWriteParameter(FILE *fp, const std::string& name, int iarg, std::vector<s
         else
         {
             if (fields[2].empty())
-                fprintf(fp, "arg%d=", iarg);
+                fprintf(fp, "arg%d", iarg);
             else
                 fprintf(fp, "%s", fields[2].c_str());
         }
