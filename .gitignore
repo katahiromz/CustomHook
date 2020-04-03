@@ -38,3 +38,4 @@ RosBE-Logs
 *.ninja
 lib*.a
 CustomHook-*-setup.exe
+*.log

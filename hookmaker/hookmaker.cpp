@@ -9,6 +9,7 @@
 #include <vector>
 #include <cassert>
 #include <map>
+#include <set>
 #include <algorithm>
 #include "../CodeReverse2/PEModule.h"
 #include "MProcessMaker.hpp"
@@ -23,6 +24,21 @@ struct FUNCTION
 };
 
 static std::map<std::string, FUNCTION> s_functions;
+
+std::set<std::string> s_excludes =
+{
+    "VirtualAlloc",
+    "VirtualQuery",
+    "VirtualProtect",
+    "VirtualFree",
+    "GetLastError",
+    "GetSystemInfo",
+    "CloseHandle",
+    "InitializeCriticalSection",
+    "EnterCriticalSection",
+    "LeaveCriticalSection",
+    "DeleteCriticalSection",
+};
 
 template <typename t_string_container, 
           typename t_string = typename t_string_container::value_type>
@@ -124,6 +140,9 @@ void DoUpdateList(HWND hwnd, LPCSTR pszText)
     SendDlgItemMessageA(hwnd, lst1, LB_RESETCONTENT, 0, 0);
     for (auto& pair : s_functions)
     {
+        if (s_excludes.count(pair.first.c_str()) > 0)
+            continue;
+
         if (pair.first.find(pszText) == 0)
         {
             SendDlgItemMessageA(hwnd, lst1, LB_ADDSTRING, 0, (LPARAM)pair.first.c_str());
@@ -673,11 +692,7 @@ BOOL DoWriteDoEnableHook(FILE *fp, const std::vector<std::string>& names)
 
 BOOL DoUpdateFile(HWND hwnd, std::vector<std::string>& names)
 {
-    std::vector<std::string> excludes =
-    {
-        "GetLastError",
-    };
-    for (auto& item : excludes)
+    for (auto& item : s_excludes)
     {
         names.erase(std::remove(names.begin(), names.end(), item), names.end());
     }
@@ -733,6 +748,9 @@ void OnAdd(HWND hwnd)
         SendDlgItemMessageA(hwnd, lst1, LB_GETTEXT, selection[i], (LPARAM)szBuff);
         if ((INT)SendDlgItemMessageA(hwnd, lst2, LB_FINDSTRINGEXACT, -1, (LPARAM)szBuff) == LB_ERR)
         {
+            if (s_excludes.count(szBuff) > 0)
+                continue;
+
             SendDlgItemMessageA(hwnd, lst2, LB_ADDSTRING, 0, (LPARAM)szBuff);
         }
     }
@@ -855,11 +873,16 @@ BOOL ExecuteRosBEAndBuildPayload(HWND hwnd, LPCWSTR pszPath, LPCWSTR rosbe_cmd)
 
     std::string strOutput;
     pmaker.ReadAll(strOutput, output);
-    DWORD dwExitCode = pmaker.GetExitCode();
     pmaker.CloseAll();
 
-    if (dwExitCode)
-        MessageBoxA(NULL, strOutput.c_str(), NULL, 0);
+    {
+        WCHAR szPath[MAX_PATH];
+        StringCbCopyW(szPath, sizeof(szPath), szSrcFile);
+        StringCbCatW(szPath, sizeof(szPath), L".log");
+        FILE *fp = _wfopen(szPath, L"w");
+        fputs(strOutput.c_str(), fp);
+        fclose(fp);
+    }
 
     // dest pathname
     WCHAR szDestFile[MAX_PATH];
@@ -988,6 +1011,9 @@ BOOL DoLoadFile(HWND hwnd, LPCWSTR pszFile)
 
         if ((INT)SendDlgItemMessageA(hwnd, lst1, LB_FINDSTRINGEXACT, -1, (LPARAM)name.c_str()) == LB_ERR)
         {
+            if (s_excludes.count(name) > 0)
+                continue;
+
             SendDlgItemMessageA(hwnd, lst1, LB_ADDSTRING, 0, (LPARAM)name.c_str());
         }
     }
@@ -1007,6 +1033,9 @@ BOOL DoLoadFile(HWND hwnd, LPCWSTR pszFile)
 
         if ((INT)SendDlgItemMessageA(hwnd, lst1, LB_FINDSTRINGEXACT, -1, (LPARAM)name.c_str()) == LB_ERR)
         {
+            if (s_excludes.count(name) > 0)
+                continue;
+
             SendDlgItemMessageA(hwnd, lst1, LB_ADDSTRING, 0, (LPARAM)name.c_str());
         }
     }
