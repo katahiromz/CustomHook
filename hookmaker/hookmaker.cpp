@@ -343,7 +343,14 @@ BOOL DoWriteSpecifier(FILE *fp, const std::string& name, std::vector<std::string
         }
         break;
     default:
-        fprintf(fp, "?");
+        if (fields[1] == "POINT")
+        {
+            fprintf(fp, "(%%ld, %%ld)");
+        }
+        else
+        {
+            fprintf(fp, "?");
+        }
         break;
     }
     return TRUE;
@@ -394,7 +401,17 @@ BOOL DoWriteParameter(FILE *fp, const std::string& name, int iarg, std::vector<s
         }
         break;
     default:
-        fprintf(fp, "?");
+        if (fields[1] == "POINT")
+        {
+            if (fields[2].empty())
+                fprintf(fp, "arg%d.x, arg%d.y", iarg, iarg);
+            else
+                fprintf(fp, "%s.x, %s.y", fields[2].c_str(), fields[2].c_str());
+        }
+        else
+        {
+            fprintf(fp, "?");
+        }
         break;
     }
     return TRUE;
