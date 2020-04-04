@@ -361,6 +361,10 @@ BOOL DoWriteSpecifier(FILE *fp, const std::string& name, std::vector<std::string
         {
             fprintf(fp, "%%s");
         }
+        else if (fields[1] == "COORD")
+        {
+            fprintf(fp, "%%s");
+        }
         else
         {
             fprintf(fp, "?");
@@ -442,6 +446,13 @@ BOOL DoWriteParameter(FILE *fp, const std::string& name, int iarg, std::vector<s
                 fprintf(fp, "do_BLENDFUNCTION(arg%d)", iarg);
             else
                 fprintf(fp, "do_BLENDFUNCTION(%s)", fields[2].c_str());
+        }
+        else if (fields[1] == "COORD")
+        {
+            if (fields[2].empty())
+                fprintf(fp, "do_COORD(arg%d)", iarg);
+            else
+                fprintf(fp, "do_COORD(%s)", fields[2].c_str());
         }
         else
         {

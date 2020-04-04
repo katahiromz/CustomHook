@@ -137,6 +137,23 @@ LPCSTR do_BLENDFUNCTION(BLENDFUNCTION bf)
     return psz;
 }
 
+LPCSTR do_COORD(COORD c)
+{
+    static CHAR s_szText[NUM][128];
+    static INT s_index = 0;
+    CHAR *psz = s_szText[(s_index++) % NUM];
+
+    if (ch_fn_wsprintfA)
+    {
+        ch_fn_wsprintfA(psz, "(%d, %d)", c.X, c.Y);
+    }
+    else
+    {
+        wsprintfA(psz, "(%d, %d)", c.X, c.Y);
+    }
+    return psz;
+}
+
 LPCSTR do_LPCRECTL(LPCRECTL prc)
 {
     static CHAR s_szText[NUM][128];
