@@ -10,19 +10,19 @@ static HANDLE s_hCurrentProcess = NULL;
 static WCHAR s_szLogFileName[MAX_PATH] = L"";
 
 typedef PVOID (WINAPI *FN_ImageDirectoryEntryToData)(PVOID, BOOLEAN, USHORT, PULONG);
-static FN_ImageDirectoryEntryToData ch_fn_ImageDirectoryEntryToData = NULL;
+static FN_ImageDirectoryEntryToData ch_fn_ImageDirectoryEntryToData = &ImageDirectoryEntryToData;
 
 typedef BOOL (WINAPI *FN_VirtualProtect)(LPVOID, SIZE_T, DWORD, PDWORD);
-static FN_VirtualProtect ch_fn_VirtualProtect = NULL;
+static FN_VirtualProtect ch_fn_VirtualProtect = &VirtualProtect;
 
 typedef BOOL (WINAPI *FN_WriteProcessMemory)(HANDLE, LPVOID, LPCVOID, SIZE_T, SIZE_T *);
-static FN_WriteProcessMemory ch_fn_WriteProcessMemory = NULL;
+static FN_WriteProcessMemory ch_fn_WriteProcessMemory = &WriteProcessMemory;
 
 typedef int (WINAPIV *FN_wsprintfA)(LPSTR, LPCSTR, ...);
-static FN_wsprintfA ch_fn_wsprintfA = NULL;
+static FN_wsprintfA ch_fn_wsprintfA = &wsprintfA;
 
 typedef int (WINAPIV *FN_wsprintfW)(LPWSTR, LPCWSTR, ...);
-static FN_wsprintfW ch_fn_wsprintfW = NULL;
+static FN_wsprintfW ch_fn_wsprintfW = &wsprintfW;
 
 typedef int (WINAPI *FN_wvsprintfA)(LPSTR, LPCSTR, va_list);
 static FN_wvsprintfA ch_fn_wvsprintfA = &wvsprintfA;
@@ -52,7 +52,6 @@ static FN_SetLastError ch_fn_SetLastError = &SetLastError;
 
 LPCSTR do_LPCSTR(LPCSTR str)
 {
-    FN_wsprintfA p_wsprintfA = (ch_fn_wsprintfA ? ch_fn_wsprintfA : &wsprintfA);
     static CHAR s_szText[NUM][1024];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
@@ -61,15 +60,14 @@ LPCSTR do_LPCSTR(LPCSTR str)
     if (str == NULL)
         return "(null)";
     if (HIWORD(str) == 0)
-        p_wsprintfA(psz, "#%u", LOWORD(str));
+        ch_fn_wsprintfA(psz, "#%u", LOWORD(str));
     else
-        p_wsprintfA(psz, "'%s'", str);
+        ch_fn_wsprintfA(psz, "'%s'", str);
     return psz;
 }
 
 LPCWSTR do_LPCWSTR(LPCWSTR str)
 {
-    FN_wsprintfW p_wsprintfW = (ch_fn_wsprintfW ? ch_fn_wsprintfW : &wsprintfW);
     static WCHAR s_szText[NUM][1024];
     static INT s_index = 0;
     WCHAR *psz = s_szText[(s_index++) % NUM];
@@ -78,15 +76,14 @@ LPCWSTR do_LPCWSTR(LPCWSTR str)
     if (str == NULL)
         return L"(null)";
     if (HIWORD(str) == 0)
-        p_wsprintfW(psz, L"#%u", LOWORD(str));
+        ch_fn_wsprintfW (psz, L"#%u", LOWORD(str));
     else
-        p_wsprintfW(psz, L"'%ls'", str);
+        ch_fn_wsprintfW (psz, L"'%ls'", str);
     return psz;
 }
 
 LPCSTR do_LPCRECT(LPCRECT prc)
 {
-    FN_wsprintfA p_wsprintfA = (ch_fn_wsprintfA ? ch_fn_wsprintfA : &wsprintfA);
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
@@ -94,13 +91,12 @@ LPCSTR do_LPCRECT(LPCRECT prc)
 
     if (prc == NULL)
         return "(null)";
-    p_wsprintfA(psz, "(%ld, %ld, %ld, %ld)", prc->left, prc->top, prc->right, prc->bottom);
+    ch_fn_wsprintfA(psz, "(%ld, %ld, %ld, %ld)", prc->left, prc->top, prc->right, prc->bottom);
     return psz;
 }
 
 LPCSTR do_LPCRECTL(LPCRECTL prc)
 {
-    FN_wsprintfA p_wsprintfA = (ch_fn_wsprintfA ? ch_fn_wsprintfA : &wsprintfA);
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
@@ -108,92 +104,85 @@ LPCSTR do_LPCRECTL(LPCRECTL prc)
 
     if (prc == NULL)
         return "(null)";
-    p_wsprintfA(psz, "(%ld, %ld, %ld, %ld)", prc->left, prc->top, prc->right, prc->bottom);
+    ch_fn_wsprintfA(psz, "(%ld, %ld, %ld, %ld)", prc->left, prc->top, prc->right, prc->bottom);
     return psz;
 }
 
 LPCSTR do_BLENDFUNCTION(BLENDFUNCTION bf)
 {
-    FN_wsprintfA p_wsprintfA = (ch_fn_wsprintfA ? ch_fn_wsprintfA : &wsprintfA);
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
     *psz = 0;
 
-    p_wsprintfA(psz, "(%d, %d, %d, %d)",
+    ch_fn_wsprintfA(psz, "(%d, %d, %d, %d)",
                 bf.BlendOp, bf.BlendFlags, bf.SourceConstantAlpha, bf.AlphaFormat);
     return psz;
 }
 
 LPCSTR do_COORD(COORD c)
 {
-    FN_wsprintfA p_wsprintfA = (ch_fn_wsprintfA ? ch_fn_wsprintfA : &wsprintfA);
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
     *psz = 0;
 
-    p_wsprintfA(psz, "(%d, %d)", c.X, c.Y);
+    ch_fn_wsprintfA(psz, "(%d, %d)", c.X, c.Y);
     return psz;
 }
 
 LPCSTR do_div_t(div_t d)
 {
-    FN_wsprintfA p_wsprintfA = (ch_fn_wsprintfA ? ch_fn_wsprintfA : &wsprintfA);
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
     *psz = 0;
 
-    p_wsprintfA(psz, "(%d, %d)", d.quot, d.rem);
+    ch_fn_wsprintfA(psz, "(%d, %d)", d.quot, d.rem);
     return psz;
 }
 
 LPCSTR do_ldiv_t(ldiv_t d)
 {
-    FN_wsprintfA p_wsprintfA = (ch_fn_wsprintfA ? ch_fn_wsprintfA : &wsprintfA);
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
     *psz = 0;
 
-    p_wsprintfA(psz, "(%ld, %ld)", d.quot, d.rem);
+    ch_fn_wsprintfA(psz, "(%ld, %ld)", d.quot, d.rem);
     return psz;
 }
 
 LPCSTR do_LARGE_INTEGER(LARGE_INTEGER li)
 {
-    FN_wsprintfA p_wsprintfA = (ch_fn_wsprintfA ? ch_fn_wsprintfA : &wsprintfA);
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
     *psz = 0;
 
-    p_wsprintfA(psz, "%I64d (0x%I64X)", li.QuadPart, li.QuadPart);
+    ch_fn_wsprintfA(psz, "%I64d (0x%I64X)", li.QuadPart, li.QuadPart);
     return psz;
 }
 
 LPCSTR do_ULARGE_INTEGER(ULARGE_INTEGER uli)
 {
-    FN_wsprintfA p_wsprintfA = (ch_fn_wsprintfA ? ch_fn_wsprintfA : &wsprintfA);
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
     *psz = 0;
 
-    p_wsprintfA(psz, "%I64u (0x%I64X)", uli.QuadPart, uli.QuadPart);
+    ch_fn_wsprintfA(psz, "%I64u (0x%I64X)", uli.QuadPart, uli.QuadPart);
     return psz;
 }
 
 LPCSTR do_CY(CY cy)
 {
-    FN_wsprintfA p_wsprintfA = (ch_fn_wsprintfA ? ch_fn_wsprintfA : &wsprintfA);
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
     *psz = 0;
 
-    p_wsprintfA(psz, "%I64d (0x%I64X)", cy.int64, cy.int64);
+    ch_fn_wsprintfA(psz, "%I64d (0x%I64X)", cy.int64, cy.int64);
     return psz;
 }
 
@@ -484,11 +473,21 @@ BOOL CH_Init(BOOL bInit)
         *wcsrchr(s_szLogFileName, L'\\') = 0;
         wcscat(s_szLogFileName, L"\\CustomHook.log");
 
-        ch_fn_ImageDirectoryEntryToData = CH_DoHookImport("imagehlp.dll", "ImageDirectoryEntryToData", NULL);
-        ch_fn_VirtualProtect = CH_DoHookImport("kernel32.dll", "VirtualProtect", NULL);
-        ch_fn_WriteProcessMemory = CH_DoHookImport("kernel32.dll", "WriteProcessMemory", NULL);
-        ch_fn_wsprintfA = CH_DoHookImport("user32.dll", "wsprintfA", NULL);
-        ch_fn_wsprintfW = CH_DoHookImport("user32.dll", "wsprintfW", NULL);
+        pv = CH_DoHookImport("imagehlp.dll", "ImageDirectoryEntryToData", NULL);
+        if (pv)
+            ch_fn_ImageDirectoryEntryToData = pv;
+        pv = CH_DoHookImport("kernel32.dll", "VirtualProtect", NULL);
+        if (pv)
+            ch_fn_VirtualProtect = pv;
+        pv = CH_DoHookImport("kernel32.dll", "WriteProcessMemory", NULL);
+        if (pv)
+            ch_fn_WriteProcessMemory = pv;
+        pv = CH_DoHookImport("user32.dll", "wsprintfA", NULL);
+        if (pv)
+            ch_fn_wsprintfA = pv;
+        pv = CH_DoHookImport("user32.dll", "wsprintfW", NULL);
+        if (pv)
+            ch_fn_wsprintfW = pv;
         pv = CH_DoHookImport("user32.dll", "wvsprintfA", NULL);
         if (pv)
             ch_fn_wvsprintfA = pv;
