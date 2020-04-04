@@ -118,6 +118,25 @@ LPCSTR do_LPCRECT(LPCRECT prc)
     return psz;
 }
 
+LPCSTR do_BLENDFUNCTION(BLENDFUNCTION bf)
+{
+    static CHAR s_szText[NUM][128];
+    static INT s_index = 0;
+    CHAR *psz = s_szText[(s_index++) % NUM];
+
+    if (ch_fn_wsprintfA)
+    {
+        ch_fn_wsprintfA(psz, "(%d, %d, %d, %d)",
+                        bf.BlendOp, bf.BlendFlags, bf.SourceConstantAlpha, bf.AlphaFormat);
+    }
+    else
+    {
+        wsprintfA(psz, "(%d, %d, %d, %d)",
+                  bf.BlendOp, bf.BlendFlags, bf.SourceConstantAlpha, bf.AlphaFormat);
+    }
+    return psz;
+}
+
 LPCSTR do_LPCRECTL(LPCRECTL prc)
 {
     static CHAR s_szText[NUM][128];
