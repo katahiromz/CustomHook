@@ -1292,6 +1292,9 @@ BOOL DoLoadTextFile(HWND hwnd, LPCWSTR pszFile)
     {
         StrTrimA(szBuff, " \t\r\n");
 
+        if (szBuff[0] == 0)
+            continue;
+
         if (is_exclude_name(szBuff))
             continue;
 
