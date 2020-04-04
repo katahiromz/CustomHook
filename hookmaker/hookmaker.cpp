@@ -1195,7 +1195,7 @@ void OnClearAll(HWND hwnd)
     SendDlgItemMessageA(hwnd, lst2, LB_RESETCONTENT, 0, 0);
 }
 
-BOOL DoLoadFile(HWND hwnd, LPCWSTR pszFile)
+BOOL DoLoadExeFile(HWND hwnd, LPCWSTR pszFile)
 {
     using namespace cr2;
 
@@ -1273,7 +1273,96 @@ void OnLoadFromFile(HWND hwnd)
     ofn.lpstrDefExt = L"exe";
     if (GetOpenFileNameW(&ofn))
     {
-        DoLoadFile(hwnd, szFile);
+        DoLoadExeFile(hwnd, szFile);
+    }
+}
+
+BOOL DoLoadTextFile(HWND hwnd, LPCWSTR pszFile)
+{
+    SendDlgItemMessageA(hwnd, lst2, LB_RESETCONTENT, 0, 0);
+
+    FILE *fp = _wfopen(pszFile, L"r");
+    if (!fp)
+    {
+        return FALSE;
+    }
+
+    char szBuff[256];
+    while (fgets(szBuff, ARRAYSIZE(szBuff), fp))
+    {
+        StrTrimA(szBuff, " \t\r\n");
+
+        if (is_exclude_name(szBuff))
+            continue;
+
+        if ((INT)SendDlgItemMessageA(hwnd, lst2, LB_FINDSTRINGEXACT, -1, (LPARAM)szBuff) == LB_ERR)
+        {
+            SendDlgItemMessageA(hwnd, lst2, LB_ADDSTRING, 0, (LPARAM)szBuff);
+        }
+    }
+
+    fclose(fp);
+    return TRUE;
+}
+
+BOOL DoSaveTextFile(HWND hwnd, LPCWSTR pszFile)
+{
+    INT nCount = (INT)SendDlgItemMessageA(hwnd, lst2, LB_GETCOUNT, 0, 0);
+    if (nCount <= 0)
+    {
+        return FALSE;
+    }
+
+    FILE *fp = _wfopen(pszFile, L"w");
+    if (!fp)
+    {
+        return FALSE;
+    }
+
+    char szBuff[256];
+    for (INT i = 0; i < nCount; ++i)
+    {
+        SendDlgItemMessageA(hwnd, lst2, LB_GETTEXT, i, (LPARAM)szBuff);
+        fprintf(fp, "%s\n", szBuff);
+    }
+
+    fclose(fp);
+    return TRUE;
+}
+
+void OnLoadTextFile(HWND hwnd)
+{
+    WCHAR szFile[MAX_PATH] = L"";
+    OPENFILENAMEW ofn = { OPENFILENAME_SIZE_VERSION_400W };
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFilter = L"Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = ARRAYSIZE(szFile);
+    ofn.lpstrTitle = L"Load text file";
+    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST |
+                OFN_HIDEREADONLY | OFN_ENABLESIZING;
+    ofn.lpstrDefExt = L"txt";
+    if (GetOpenFileNameW(&ofn))
+    {
+        DoLoadTextFile(hwnd, szFile);
+    }
+}
+
+void OnSaveTextFile(HWND hwnd)
+{
+    WCHAR szFile[MAX_PATH] = L"";
+    OPENFILENAMEW ofn = { OPENFILENAME_SIZE_VERSION_400W };
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFilter = L"Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = ARRAYSIZE(szFile);
+    ofn.lpstrTitle = L"Save as text file";
+    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT |
+                OFN_ENABLESIZING;
+    ofn.lpstrDefExt = L"txt";
+    if (GetOpenFileNameW(&ofn))
+    {
+        DoSaveTextFile(hwnd, szFile);
     }
 }
 
@@ -1304,6 +1393,12 @@ void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         break;
     case psh5:
         OnClearAll(hwnd);
+        break;
+    case psh6:
+        OnLoadTextFile(hwnd);
+        break;
+    case psh7:
+        OnSaveTextFile(hwnd);
         break;
     }
 }
@@ -1359,7 +1454,7 @@ void OnDropFiles(HWND hwnd, HDROP hdrop)
         lstrcpynW(szFile, szTarget, MAX_PATH);
     }
 
-    DoLoadFile(hwnd, szFile);
+    DoLoadExeFile(hwnd, szFile);
     DragFinish(hdrop);
 }
 
