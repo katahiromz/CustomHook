@@ -337,7 +337,13 @@ BOOL DoWriteSpecifier(FILE *fp, const std::string& name, std::vector<std::string
         {
             fprintf(fp, "%%ls");
         }
-        else if (fields[1] == "LPCRECT")
+        else if (fields[1] == "LPCRECT" ||
+                 fields[1] == "const RECT*")
+        {
+            fprintf(fp, "%%s");
+        }
+        else if (fields[1] == "LPCRECTL" ||
+                 fields[1] == "const RECTL*")
         {
             fprintf(fp, "%%s");
         }
@@ -396,12 +402,19 @@ BOOL DoWriteParameter(FILE *fp, const std::string& name, int iarg, std::vector<s
             else
                 fprintf(fp, "do_LPCWSTR(%s)", fields[2].c_str());
         }
-        else if (fields[1] == "LPCRECT")
+        else if (fields[1] == "LPCRECT" || fields[1] == "const RECT*")
         {
             if (fields[2].empty())
                 fprintf(fp, "do_LPCRECT(arg%d)", iarg);
             else
                 fprintf(fp, "do_LPCRECT(%s)", fields[2].c_str());
+        }
+        else if (fields[1] == "LPCRECTL" || fields[1] == "const RECTL*")
+        {
+            if (fields[2].empty())
+                fprintf(fp, "do_LPCRECTL(arg%d)", iarg);
+            else
+                fprintf(fp, "do_LPCRECTL(%s)", fields[2].c_str());
         }
         else
         {
