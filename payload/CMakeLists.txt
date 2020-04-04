@@ -12,18 +12,12 @@ endif()
 target_link_libraries(payload
     aclui
     advapi32
-    cap
     comctl32
     comdlg32
     crypt32
-    ctl3d32
-    d3drm
     ddraw
     dhcpcsvc
     dinput
-    dlcapi
-    dplayx
-    dsetup
     dsound
     gdi32
     gdiplus
@@ -33,10 +27,8 @@ target_link_libraries(payload
     imm32
     iphlpapi
     kernel32
-    ksproxy
     lz32
     mapi32
-    mfcuia32
     mgmtapi
     mpr
     mprapi
@@ -54,16 +46,12 @@ target_link_libraries(payload
     oleaut32
     olecli32
     oledlg
-    olepro32
     olesvr32
     opengl32
-    penwin32
-    pkpd32
     psapi
     quartz
     rasapi32
     rasdlg
-    rpcdce4
     rpcns4
     rpcrt4
     rtm
@@ -74,24 +62,17 @@ target_link_libraries(payload
     shfolder
     shlwapi
     snmpapi
-    svrapi
     tapi32
     url
     user32
     userenv
     uuid
-    vdmdbg
     version
     vfw32
-    win32spl
     wininet
     winmm
     winspool
-    winstrm
     wldap32
-    wow32
     ws2_32
-    wsnmp32
     wsock32
-    wst
     wtsapi32)
