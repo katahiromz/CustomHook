@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "CustomHook"
-#define MyAppVersion "1.1"
+#define MyAppVersion "1.2"
 #define MyAppPublisher "Katayama Hirofumi MZ"
 #define MyAppURL "https://katahiromz.web.fc2.com"
 #define MyAppExeName "injector.exe"
