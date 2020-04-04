@@ -259,19 +259,26 @@ BOOL DoWriteFunctionTypes(FILE *fp, const std::vector<std::string>& names)
         fprintf(fp, "typedef %s (%s *FN_%s)(", ret.c_str(), fn.convention.c_str(),
                 name.c_str());
 
-        bool first = true;
-        for (auto& param : fn.params)
+        if (fn.params.empty())
         {
-            if (!first)
-                fprintf(fp, ", ");
-            if (param == "...")
+            fprintf(fp, "void");
+        }
+        else
+        {
+            bool first = true;
+            for (auto& param : fn.params)
             {
-                fprintf(fp, "%s", param.c_str());
-                break;
+                if (!first)
+                    fprintf(fp, ", ");
+                if (param == "...")
+                {
+                    fprintf(fp, "%s", param.c_str());
+                    break;
+                }
+                split(fields, param, ':');
+                fprintf(fp, "%s", fields[1].c_str());
+                first = false;
             }
-            split(fields, param, ':');
-            fprintf(fp, "%s", fields[1].c_str());
-            first = false;
         }
         fprintf(fp, ");\n");
     }
