@@ -236,16 +236,8 @@ CH_DoHookImportEx(HMODULE hModule, const char *module_name, const char *func_nam
     if (hModule == NULL)
         return NULL;
 
-    if (ch_fn_ImageDirectoryEntryToData)
-    {
-        pImports = (PIMAGE_IMPORT_DESCRIPTOR)
-            ch_fn_ImageDirectoryEntryToData(hModule, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &size);
-    }
-    else
-    {
-        pImports = (PIMAGE_IMPORT_DESCRIPTOR)
-            ImageDirectoryEntryToData(hModule, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &size);
-    }
+    pImports = (PIMAGE_IMPORT_DESCRIPTOR)
+        ch_fn_ImageDirectoryEntryToData(hModule, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &size);
 
     for (; pImports->Characteristics != 0; ++pImports)
     {
@@ -282,34 +274,17 @@ CH_DoHookImportEx(HMODULE hModule, const char *module_name, const char *func_nam
                     continue;
             }
 
-            if (ch_fn_VirtualProtect && ch_fn_WriteProcessMemory)
+            if (!ch_fn_VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), PAGE_READWRITE, &dwOldProtect))
+                return NULL;
+
+            fnOriginal = (LPVOID)pIAT->u1.Function;
+            if (fn)
             {
-                if (!ch_fn_VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), PAGE_READWRITE, &dwOldProtect))
-                    return NULL;
-
-                fnOriginal = (LPVOID)pIAT->u1.Function;
-                if (fn)
-                {
-                    ch_fn_WriteProcessMemory(s_hCurrentProcess, &pIAT->u1.Function, &fn, sizeof(pIAT->u1.Function), NULL);
-                    pIAT->u1.Function = (DWORD_PTR)fn;
-                }
-
-                ch_fn_VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), dwOldProtect, &dwOldProtect);
+                ch_fn_WriteProcessMemory(s_hCurrentProcess, &pIAT->u1.Function, &fn, sizeof(pIAT->u1.Function), NULL);
+                pIAT->u1.Function = (DWORD_PTR)fn;
             }
-            else
-            {
-                if (!VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), PAGE_READWRITE, &dwOldProtect))
-                    return NULL;
 
-                fnOriginal = (LPVOID)pIAT->u1.Function;
-                if (fn)
-                {
-                    WriteProcessMemory(s_hCurrentProcess, &pIAT->u1.Function, &fn, sizeof(pIAT->u1.Function), NULL);
-                    pIAT->u1.Function = (DWORD_PTR)fn;
-                }
-
-                VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), dwOldProtect, &dwOldProtect);
-            }
+            ch_fn_VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), dwOldProtect, &dwOldProtect);
 
             return fnOriginal;
         }
@@ -334,16 +309,8 @@ CH_DoHookDelayEx(HMODULE hModule, const char *module_name, const char *func_name
     if (hModule == NULL)
         return NULL;
 
-    if (ch_fn_ImageDirectoryEntryToData)
-    {
-        pDelay = (ImgDelayDescr *)
-            ch_fn_ImageDirectoryEntryToData(hModule, TRUE, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT, &size);
-    }
-    else
-    {
-        pDelay = (ImgDelayDescr *)
-            ImageDirectoryEntryToData(hModule, TRUE, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT, &size);
-    }
+    pDelay = (ImgDelayDescr *)
+        ch_fn_ImageDirectoryEntryToData(hModule, TRUE, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT, &size);
 
     for (; pDelay->rvaDLLName != 0; ++pDelay)
     {
@@ -380,34 +347,17 @@ CH_DoHookDelayEx(HMODULE hModule, const char *module_name, const char *func_name
                     continue;
             }
 
-            if (ch_fn_VirtualProtect && ch_fn_WriteProcessMemory)
+            if (!ch_fn_VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), PAGE_READWRITE, &dwOldProtect))
+                return NULL;
+
+            fnOriginal = (LPVOID)pIAT->u1.Function;
+            if (fn)
             {
-                if (!ch_fn_VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), PAGE_READWRITE, &dwOldProtect))
-                    return NULL;
-
-                fnOriginal = (LPVOID)pIAT->u1.Function;
-                if (fn)
-                {
-                    ch_fn_WriteProcessMemory(s_hCurrentProcess, &pIAT->u1.Function, &fn, sizeof(pIAT->u1.Function), NULL);
-                    pIAT->u1.Function = (DWORD_PTR)fn;
-                }
-
-                ch_fn_VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), dwOldProtect, &dwOldProtect);
+                ch_fn_WriteProcessMemory(s_hCurrentProcess, &pIAT->u1.Function, &fn, sizeof(pIAT->u1.Function), NULL);
+                pIAT->u1.Function = (DWORD_PTR)fn;
             }
-            else
-            {
-                if (!VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), PAGE_READWRITE, &dwOldProtect))
-                    return NULL;
 
-                fnOriginal = (LPVOID)pIAT->u1.Function;
-                if (fn)
-                {
-                    WriteProcessMemory(s_hCurrentProcess, &pIAT->u1.Function, &fn, sizeof(pIAT->u1.Function), NULL);
-                    pIAT->u1.Function = (DWORD_PTR)fn;
-                }
-
-                VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), dwOldProtect, &dwOldProtect);
-            }
+            ch_fn_VirtualProtect(&pIAT->u1.Function, sizeof(pIAT->u1.Function), dwOldProtect, &dwOldProtect);
 
             return fnOriginal;
         }
