@@ -41,7 +41,7 @@ static FN_CloseHandle ch_fn_CloseHandle = &CloseHandle;
 typedef HMODULE (WINAPI *FN_GetModuleHandleA)(LPCSTR);
 static FN_GetModuleHandleA ch_fn_GetModuleHandleA = &GetModuleHandleA;
 
-typedef DWORD (WINAPI *FN_GetLastError)(VOID);
+typedef DWORD (WINAPI *FN_GetLastError)();
 static FN_GetLastError ch_fn_GetLastError = &GetLastError;
 
 typedef VOID (WINAPI *FN_SetLastError)(DWORD);
