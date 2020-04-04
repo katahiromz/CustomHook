@@ -337,6 +337,10 @@ BOOL DoWriteSpecifier(FILE *fp, const std::string& name, std::vector<std::string
         {
             fprintf(fp, "%%ls");
         }
+        else if (fields[1] == "LPCRECT")
+        {
+            fprintf(fp, "%%s");
+        }
         else
         {
             fprintf(fp, "%%p");
@@ -391,6 +395,13 @@ BOOL DoWriteParameter(FILE *fp, const std::string& name, int iarg, std::vector<s
                 fprintf(fp, "do_LPCWSTR(arg%d)", iarg);
             else
                 fprintf(fp, "do_LPCWSTR(%s)", fields[2].c_str());
+        }
+        else if (fields[1] == "LPCRECT")
+        {
+            if (fields[2].empty())
+                fprintf(fp, "do_LPCRECT(arg%d)", iarg);
+            else
+                fprintf(fp, "do_LPCRECT(%s)", fields[2].c_str());
         }
         else
         {

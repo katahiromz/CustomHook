@@ -99,6 +99,25 @@ LPCWSTR do_LPCWSTR(LPCWSTR str)
     return psz;
 }
 
+LPCSTR do_LPCRECT(LPCRECT prc)
+{
+    static CHAR s_szText[NUM][128];
+    static INT s_index = 0;
+    CHAR *psz = s_szText[(s_index++) % NUM];
+
+    if (prc == NULL)
+        return "(null)";
+    if (ch_fn_wsprintfA)
+    {
+        ch_fn_wsprintfA(psz, "(%ld, %ld, %ld, %ld)", prc->left, prc->top, prc->right, prc->bottom);
+    }
+    else
+    {
+        wsprintfA(psz, "(%ld, %ld, %ld, %ld)", prc->left, prc->top, prc->right, prc->bottom);
+    }
+    return psz;
+}
+
 void CH_TraceV(const char *fmt, va_list va)
 {
     HANDLE hFile;
