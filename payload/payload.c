@@ -140,8 +140,8 @@ LPCSTR do_LPCRECTL(LPCRECTL prc)
 void CH_TraceV(const char *fmt, va_list va)
 {
     HANDLE hFile;
-    static CHAR s_szText[NUM][1024];
     DWORD cbWritten;
+    static CHAR s_szText[NUM][1024];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
 
