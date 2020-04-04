@@ -140,8 +140,10 @@ LPCSTR do_LPCRECTL(LPCRECTL prc)
 void CH_TraceV(const char *fmt, va_list va)
 {
     HANDLE hFile;
-    static CHAR s_buf[1024];
+    static CHAR s_szText[NUM][1024];
     DWORD cbWritten;
+    static INT s_index = 0;
+    CHAR *psz = s_szText[(s_index++) % NUM];
 
     hFile = ch_fn_CreateFileW(L"CustomHook.log",
                               GENERIC_READ | GENERIC_WRITE,
@@ -154,8 +156,8 @@ void CH_TraceV(const char *fmt, va_list va)
         return;
 
     ch_fn_SetFilePointer(hFile, 0, NULL, FILE_END);
-    ch_fn_wvsprintfA(s_buf, fmt, va);
-    ch_fn_WriteFile(hFile, s_buf, strlen(s_buf), &cbWritten, NULL);
+    ch_fn_wvsprintfA(psz, fmt, va);
+    ch_fn_WriteFile(hFile, psz, strlen(psz), &cbWritten, NULL);
     ch_fn_CloseHandle(hFile);
 }
 
