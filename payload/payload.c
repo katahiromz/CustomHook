@@ -154,6 +154,40 @@ LPCSTR do_COORD(COORD c)
     return psz;
 }
 
+LPCSTR do_div_t(div_t d)
+{
+    static CHAR s_szText[NUM][128];
+    static INT s_index = 0;
+    CHAR *psz = s_szText[(s_index++) % NUM];
+
+    if (ch_fn_wsprintfA)
+    {
+        ch_fn_wsprintfA(psz, "(%d, %d)", d.quot, d.rem);
+    }
+    else
+    {
+        wsprintfA(psz, "(%d, %d)", d.quot, d.rem);
+    }
+    return psz;
+}
+
+LPCSTR do_ldiv_t(ldiv_t d)
+{
+    static CHAR s_szText[NUM][128];
+    static INT s_index = 0;
+    CHAR *psz = s_szText[(s_index++) % NUM];
+
+    if (ch_fn_wsprintfA)
+    {
+        ch_fn_wsprintfA(psz, "(%ld, %ld)", d.quot, d.rem);
+    }
+    else
+    {
+        wsprintfA(psz, "(%ld, %ld)", d.quot, d.rem);
+    }
+    return psz;
+}
+
 LPCSTR do_LPCRECTL(LPCRECTL prc)
 {
     static CHAR s_szText[NUM][128];

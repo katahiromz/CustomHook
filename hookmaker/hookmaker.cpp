@@ -365,6 +365,14 @@ BOOL DoWriteSpecifier(FILE *fp, const std::string& name, std::vector<std::string
         {
             fprintf(fp, "%%s");
         }
+        else if (fields[1] == "div_t")
+        {
+            fprintf(fp, "%%s");
+        }
+        else if (fields[1] == "ldiv_t")
+        {
+            fprintf(fp, "%%s");
+        }
         else
         {
             fprintf(fp, "?");
@@ -453,6 +461,20 @@ BOOL DoWriteParameter(FILE *fp, const std::string& name, int iarg, std::vector<s
                 fprintf(fp, "do_COORD(arg%d)", iarg);
             else
                 fprintf(fp, "do_COORD(%s)", fields[2].c_str());
+        }
+        else if (fields[1] == "div_t")
+        {
+            if (fields[2].empty())
+                fprintf(fp, "do_div_t(arg%d)", iarg);
+            else
+                fprintf(fp, "do_div_t(%s)", fields[2].c_str());
+        }
+        else if (fields[1] == "ldiv_t")
+        {
+            if (fields[2].empty())
+                fprintf(fp, "do_ldiv_t(arg%d)", iarg);
+            else
+                fprintf(fp, "do_ldiv_t(%s)", fields[2].c_str());
         }
         else
         {
