@@ -54,6 +54,7 @@ LPCSTR do_LPCSTR(LPCSTR str)
     static CHAR s_szText[NUM][1024];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
+    *psz = 0;
 
     if (str == NULL)
         return "(null)";
@@ -72,6 +73,7 @@ LPCWSTR do_LPCWSTR(LPCWSTR str)
     static WCHAR s_szText[NUM][1024];
     static INT s_index = 0;
     WCHAR *psz = s_szText[(s_index++) % NUM];
+    *psz = 0;
 
     if (str == NULL)
         return L"(null)";
@@ -90,6 +92,7 @@ LPCSTR do_LPCRECT(LPCRECT prc)
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
+    *psz = 0;
 
     if (prc == NULL)
         return "(null)";
@@ -105,6 +108,7 @@ LPCSTR do_LPCRECTL(LPCRECTL prc)
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
+    *psz = 0;
 
     if (prc == NULL)
         return "(null)";
@@ -120,6 +124,7 @@ LPCSTR do_BLENDFUNCTION(BLENDFUNCTION bf)
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
+    *psz = 0;
 
     if (ch_fn_wsprintfA)
     {
@@ -134,6 +139,7 @@ LPCSTR do_COORD(COORD c)
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
+    *psz = 0;
 
     if (ch_fn_wsprintfA)
     {
@@ -147,6 +153,7 @@ LPCSTR do_div_t(div_t d)
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
+    *psz = 0;
 
     if (ch_fn_wsprintfA)
     {
@@ -160,6 +167,7 @@ LPCSTR do_ldiv_t(ldiv_t d)
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
+    *psz = 0;
 
     if (ch_fn_wsprintfA)
     {
@@ -173,6 +181,7 @@ LPCSTR do_LARGE_INTEGER(LARGE_INTEGER li)
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
+    *psz = 0;
 
     if (ch_fn_wsprintfA)
     {
@@ -186,6 +195,7 @@ LPCSTR do_ULARGE_INTEGER(ULARGE_INTEGER uli)
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
+    *psz = 0;
 
     if (ch_fn_wsprintfA)
     {
@@ -199,6 +209,7 @@ LPCSTR do_CY(CY cy)
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
+    *psz = 0;
 
     if (ch_fn_wsprintfA)
     {
