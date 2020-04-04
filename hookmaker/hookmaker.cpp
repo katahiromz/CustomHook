@@ -373,6 +373,14 @@ BOOL DoWriteSpecifier(FILE *fp, const std::string& name, std::vector<std::string
         {
             fprintf(fp, "%%s");
         }
+        else if (fields[1] == "LARGE_INTEGER")
+        {
+            fprintf(fp, "%%s");
+        }
+        else if (fields[1] == "ULARGE_INTEGER")
+        {
+            fprintf(fp, "%%s");
+        }
         else
         {
             fprintf(fp, "?");
@@ -475,6 +483,20 @@ BOOL DoWriteParameter(FILE *fp, const std::string& name, int iarg, std::vector<s
                 fprintf(fp, "do_ldiv_t(arg%d)", iarg);
             else
                 fprintf(fp, "do_ldiv_t(%s)", fields[2].c_str());
+        }
+        else if (fields[1] == "LARGE_INTEGER")
+        {
+            if (fields[2].empty())
+                fprintf(fp, "do_LARGE_INTEGER(arg%d)", iarg);
+            else
+                fprintf(fp, "do_LARGE_INTEGER(%s)", fields[2].c_str());
+        }
+        else if (fields[1] == "ULARGE_INTEGER")
+        {
+            if (fields[2].empty())
+                fprintf(fp, "do_ULARGE_INTEGER(arg%d)", iarg);
+            else
+                fprintf(fp, "do_ULARGE_INTEGER(%s)", fields[2].c_str());
         }
         else
         {

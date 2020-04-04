@@ -118,6 +118,25 @@ LPCSTR do_LPCRECT(LPCRECT prc)
     return psz;
 }
 
+LPCSTR do_LPCRECTL(LPCRECTL prc)
+{
+    static CHAR s_szText[NUM][128];
+    static INT s_index = 0;
+    CHAR *psz = s_szText[(s_index++) % NUM];
+
+    if (prc == NULL)
+        return "(null)";
+    if (ch_fn_wsprintfA)
+    {
+        ch_fn_wsprintfA(psz, "(%ld, %ld, %ld, %ld)", prc->left, prc->top, prc->right, prc->bottom);
+    }
+    else
+    {
+        wsprintfA(psz, "(%ld, %ld, %ld, %ld)", prc->left, prc->top, prc->right, prc->bottom);
+    }
+    return psz;
+}
+
 LPCSTR do_BLENDFUNCTION(BLENDFUNCTION bf)
 {
     static CHAR s_szText[NUM][128];
@@ -188,21 +207,36 @@ LPCSTR do_ldiv_t(ldiv_t d)
     return psz;
 }
 
-LPCSTR do_LPCRECTL(LPCRECTL prc)
+LPCSTR do_LARGE_INTEGER(LARGE_INTEGER li)
 {
     static CHAR s_szText[NUM][128];
     static INT s_index = 0;
     CHAR *psz = s_szText[(s_index++) % NUM];
 
-    if (prc == NULL)
-        return "(null)";
     if (ch_fn_wsprintfA)
     {
-        ch_fn_wsprintfA(psz, "(%ld, %ld, %ld, %ld)", prc->left, prc->top, prc->right, prc->bottom);
+        ch_fn_wsprintfA(psz, "(%I64d (0x%I64X))", li.QuadPart, li.QuadPart);
     }
     else
     {
-        wsprintfA(psz, "(%ld, %ld, %ld, %ld)", prc->left, prc->top, prc->right, prc->bottom);
+        wsprintfA(psz, "(%I64d (0x%I64X))", li.QuadPart, li.QuadPart);
+    }
+    return psz;
+}
+
+LPCSTR do_ULARGE_INTEGER(ULARGE_INTEGER uli)
+{
+    static CHAR s_szText[NUM][128];
+    static INT s_index = 0;
+    CHAR *psz = s_szText[(s_index++) % NUM];
+
+    if (ch_fn_wsprintfA)
+    {
+        ch_fn_wsprintfA(psz, "(%I64u (0x%I64X))", uli.QuadPart, uli.QuadPart);
+    }
+    else
+    {
+        wsprintfA(psz, "(%I64u (0x%I64X))", uli.QuadPart, uli.QuadPart);
     }
     return psz;
 }
