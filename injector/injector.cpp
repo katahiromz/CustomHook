@@ -8,6 +8,7 @@
 #include <tchar.h>
 #include <cstdlib>
 #include <cassert>
+#include <vector>
 #include "resource.h"
 
 LPWSTR LoadStringDx(INT nID)
@@ -83,8 +84,41 @@ struct AutoCloseHandle
     }
 };
 
-BOOL DoInjectDLL(HWND hwnd, DWORD pid, LPCWSTR pszDllFile)
+bool GetProcessThreads(DWORD pid, std::vector<DWORD>& tids)
 {
+    HANDLE hSnapshot;
+    hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+    if (hSnapshot == INVALID_HANDLE_VALUE)
+        return false;
+
+    #undef THREADENTRY32
+    #undef Thread32First
+    #undef Thread32Next
+    THREADENTRY32 te32 = { sizeof(te32) };
+
+    if (Thread32First(hSnapshot, &te32))
+    {
+        do
+        {
+            if (te32.th32OwnerProcessID == pid)
+            {
+                tids.push_back(te32.th32ThreadID);
+            }
+        } while (Thread32Next(hSnapshot, &te32));
+    }
+
+    return !tids.empty();
+}
+
+BOOL DoInjectDLL(HWND hwnd, DWORD pid, LPCWSTR pszDllFile, INT iMethod)
+{
+    std::vector<DWORD> tids;
+    if (!GetProcessThreads(pid, tids))
+    {
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTGETTHREADS), NULL, MB_ICONERROR);
+        return false;
+    }
+
     AutoCloseHandle hProcess(OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid));
     if (!hProcess)
     {
@@ -117,22 +151,38 @@ BOOL DoInjectDLL(HWND hwnd, DWORD pid, LPCWSTR pszDllFile)
         return FALSE;
     }
 
-    AutoCloseHandle hThread(CreateRemoteThread(hProcess, NULL, 0,
-        (LPTHREAD_START_ROUTINE)pLoadLibraryW, pParam, 0, NULL));
-    if (!hThread)
+    DWORD dwCode = FALSE;
+    if (iMethod == 0) // Remote Thread
     {
-        MessageBoxW(hwnd, LoadStringDx(IDS_CANTMAKERTHREAD), NULL, MB_ICONERROR);
-        VirtualFreeEx(hProcess, pParam, cbParam, MEM_RELEASE);
-        return FALSE;
+        AutoCloseHandle hThread(CreateRemoteThread(hProcess, NULL, 0,
+            (LPTHREAD_START_ROUTINE)pLoadLibraryW, pParam, 0, NULL));
+        if (!hThread)
+        {
+            MessageBoxW(hwnd, LoadStringDx(IDS_CANTMAKERTHREAD), NULL, MB_ICONERROR);
+            VirtualFreeEx(hProcess, pParam, cbParam, MEM_RELEASE);
+            return FALSE;
+        }
+
+        WaitForSingleObject(hThread, INFINITE);
+
+        GetExitCodeThread(hThread, &dwCode);
+    }
+    else if (iMethod == 1) // APC
+    {
+        for (size_t i = 0; i < tids.size(); ++i)
+        {
+            HANDLE hThread = OpenThread(THREAD_SET_CONTEXT, FALSE, tids[i]);
+            if (hThread)
+            {
+                if (QueueUserAPC((PAPCFUNC)pLoadLibraryW, hThread, (ULONG_PTR)pParam))
+                    dwCode = TRUE;
+                CloseHandle(hThread);
+            }
+        }
     }
 
-    WaitForSingleObject(hThread, INFINITE);
-
-    DWORD dwCode = 0;
-    GetExitCodeThread(hThread, &dwCode);
-
     VirtualFreeEx(hProcess, pParam, cbParam, MEM_RELEASE);
-    if (dwCode == 0)
+    if (!dwCode)
     {
         MessageBoxW(hwnd, LoadStringDx(IDS_INJECTIONFAIL), NULL, MB_ICONERROR);
         return FALSE;
@@ -188,8 +238,15 @@ BOOL DoGetProcessModuleInfo(LPMODULEENTRY32W pme, DWORD pid, LPCWSTR pszModule)
     return FALSE;
 }
 
-BOOL DoUninjectDLL(HWND hwnd, DWORD pid, LPCWSTR pszDllFile)
+BOOL DoUninjectDLL(HWND hwnd, DWORD pid, LPCWSTR pszDllFile, INT iMethod)
 {
+    std::vector<DWORD> tids;
+    if (!GetProcessThreads(pid, tids))
+    {
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTGETTHREADS), NULL, MB_ICONERROR);
+        return false;
+    }
+
     AutoCloseHandle hProcess(OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid));
     if (!hProcess)
     {
@@ -219,17 +276,40 @@ BOOL DoUninjectDLL(HWND hwnd, DWORD pid, LPCWSTR pszDllFile)
         return FALSE;
     }
 
-    AutoCloseHandle hThread(CreateRemoteThread(hProcess, NULL, 0,
-        (LPTHREAD_START_ROUTINE)pLdrUnloadDll, hModule, 0, NULL));
-    if (!hThread)
+    BOOL ret = FALSE;
+    if (iMethod == 0) // RemoteThread
     {
-        MessageBoxW(hwnd, LoadStringDx(IDS_CANTMAKERTHREAD), NULL, MB_ICONERROR);
-        return FALSE;
+        AutoCloseHandle hThread(CreateRemoteThread(hProcess, NULL, 0,
+            (LPTHREAD_START_ROUTINE)pLdrUnloadDll, hModule, 0, NULL));
+        if (!hThread)
+        {
+            MessageBoxW(hwnd, LoadStringDx(IDS_CANTMAKERTHREAD), NULL, MB_ICONERROR);
+            return FALSE;
+        }
+        WaitForSingleObject(hThread, INFINITE);
+        ret = TRUE;
+    }
+    else if (iMethod == 1) // APC
+    {
+        for (size_t i = 0; i < tids.size(); ++i)
+        {
+            HANDLE hThread = OpenThread(THREAD_SET_CONTEXT, FALSE, tids[i]);
+            if (hThread)
+            {
+                if (QueueUserAPC((PAPCFUNC)pLdrUnloadDll, hThread, (ULONG_PTR)hModule))
+                    ret = TRUE;
+
+                CloseHandle(hThread);
+            }
+        }
     }
 
-    WaitForSingleObject(hThread, INFINITE);
+    if (!ret)
+    {
+        MessageBoxW(hwnd, LoadStringDx(IDS_CANTUNINJECT), NULL, MB_ICONERROR);
+    }
 
-    return TRUE;
+    return ret;
 }
 
 void OnInject(HWND hwnd, BOOL bInject)
@@ -252,13 +332,16 @@ void OnInject(HWND hwnd, BOOL bInject)
 #endif
     //MessageBoxW(NULL, szDllFile, NULL, 0);
 
+
     if (bInject)
     {
-        DoInjectDLL(hwnd, pid, szDllFile);
+        INT iMethod = (INT)SendDlgItemMessageW(hwnd, cmb1, CB_GETCURSEL, 0, 0);
+        DoInjectDLL(hwnd, pid, szDllFile, iMethod);
     }
     else
     {
-        DoUninjectDLL(hwnd, pid, szDllFile);
+        INT iMethod = (INT)SendDlgItemMessageW(hwnd, cmb1, CB_GETCURSEL, 0, 0);
+        DoUninjectDLL(hwnd, pid, szDllFile, iMethod);
     }
 }
 
@@ -272,6 +355,11 @@ BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
     PathAppendW(szExeFile, L"target.exe");
 
     SetDlgItemTextW(hwnd, edt2, szExeFile);
+
+    SendDlgItemMessageW(hwnd, cmb1, CB_ADDSTRING, 0, (LPARAM)LoadStringDx(IDS_REMOTETHREAD));
+    SendDlgItemMessageW(hwnd, cmb1, CB_ADDSTRING, 0, (LPARAM)LoadStringDx(IDS_APC));
+    SendDlgItemMessageW(hwnd, cmb1, CB_SETCURSEL, 1, 0);
+
     return TRUE;
 }
 
@@ -327,7 +415,8 @@ void OnRunWithInjection(HWND hwnd)
 #endif
     //MessageBoxW(NULL, szDllFile, NULL, 0);
 
-    DoInjectDLL(hwnd, pi.dwProcessId, szDllFile);
+    INT iMethod = (INT)SendDlgItemMessageW(hwnd, cmb1, CB_GETCURSEL, 0, 0);
+    DoInjectDLL(hwnd, pi.dwProcessId, szDllFile, iMethod);
 
     ResumeThread(pi.hThread);
     CloseHandle(pi.hProcess);
